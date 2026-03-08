@@ -46,3 +46,22 @@ This file must be append-only and contain:
 
 **Breaking changes:**
 - None (Initial release).
+
+---
+
+## March 8, 2026 (Session 2)
+**Features added:**
+- Implemented a responsive 7-day Weekly View grid on the dashboard. Users can now see habit completions for the last 7 days and toggle statuses for any of those days.
+
+**Files/modules affected:**
+- `app/Http/Controllers/HabitController.php` (Updated to load 7 days of completions).
+- `resources/views/dashboard.blade.php` (Replaced list with table grid).
+
+**Migrations created:**
+- None.
+
+**Tests added/updated:**
+- `tests/Feature/HabitTest.php` (Updated assertions for the dashboard).
+
+**Breaking changes:**
+- None.

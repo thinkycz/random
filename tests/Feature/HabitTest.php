@@ -8,6 +8,8 @@ use Tests\TestCase;
 
 class HabitTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * A basic feature test example.
      */
@@ -20,6 +22,8 @@ class HabitTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee($habit->name);
+        $response->assertSee('Last 7 Days');
+        $response->assertSee(now()->format('j')); // today's day number
     }
 
     public function test_user_can_create_habit(): void
@@ -52,7 +56,7 @@ class HabitTest extends TestCase
 
         $this->assertDatabaseHas('habit_completions', [
             'habit_id' => $habit->id,
-            'completed_date' => $today,
+            'completed_date' => $today . ' 00:00:00',
         ]);
 
         // Uncomplete
@@ -62,7 +66,7 @@ class HabitTest extends TestCase
 
         $this->assertDatabaseMissing('habit_completions', [
             'habit_id' => $habit->id,
-            'completed_date' => $today,
+            'completed_date' => $today . ' 00:00:00',
         ]);
     }
 }
