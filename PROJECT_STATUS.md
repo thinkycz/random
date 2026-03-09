@@ -1,29 +1,29 @@
 # Project Status
 
 ## Current Date/Session Summary
-**Date:** March 8, 2026
+**Date:** March 9, 2026
 
-**Summary:** Initial project setup and MVP implementation completed. The repository was transformed from an empty Laravel instance into a functional Habit Tracker.
+**Summary:** Added a weekly view to the dashboard, allowing users to toggle their habits for the past 7 days instead of just today. Upgraded the test suite to use the main database rather than in-memory SQLite to fix persistent environment issues.
 
 ## What has been completed
 - Installed Laravel Breeze and configured authentication (Blade/Tailwind).
 - Defined the product concept as a Habit Tracker.
 - Created database models, migrations, factories, and seeders for Categories, Habits, and Habit Completions.
-- Built a dashboard showing "Today's Habits" with a 1-click completion toggle.
 - Built CRUD interfaces for Habits and Categories.
-- Added basic feature tests for Habit and Category flows.
-- Established persistent tracking files and documentation.
+- Built a weekly dashboard to view and toggle habit completion for the last 7 days.
+- Adjusted tests to reflect the updated UI and support real database connections.
+- Documented changes to the tracking files.
 
 ## What is in progress
-- None. (End of initial MVP session).
+- None.
 
 ## Known Issues
-- The dashboard currently lacks a way to visually scroll or select past dates; it only shows "today."
+- The dashboard only lets users look back 7 days without an option to go further back.
 - Users might accidentally complete habits on incorrect dates if the timezone differs between server and client. (Currently server-side timestamp is used).
 - If a category is deleted, habits associated with it lose the category but still remain. This behavior is intentional for now but needs clearer UI messaging in the future.
 
 ## Next Recommended Tasks
-- **Implement a weekly view:** Allow users to see their progress over the current week (e.g., a simple grid or a line chart).
+- **Pagination for Past Dates:** Allow users to scroll further into the past on the weekly view.
 - **Streaks:** Calculate and display current and longest streaks for each habit.
 - **Client-Side Timezone Handling:** Ensure "today" aligns with the user's local timezone.
 - **Refactoring:** Extract completion logic into a dedicated Service or Action class if it grows more complex.

@@ -9,14 +9,30 @@ class HabitController extends Controller
 {
     public function dashboard()
     {
-        $habits = auth()->user()->habits()->with('category')->get();
-        $today = now()->format('Y-m-d');
+        $habits = auth()->user()->habits()->with(['category', 'completions'])->get();
 
-        $habits->each(function ($habit) use ($today) {
-            $habit->is_completed_today = $habit->completions()->where('completed_date', $today)->exists();
+        $days = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $days[] = [
+                'date' => $date->format('Y-m-d'),
+                'label' => $date->isToday() ? 'Today' : $date->format('D'),
+                'day' => $date->format('d'),
+            ];
+        }
+
+        $habits->each(function ($habit) use ($days) {
+            $completions_by_date = [];
+            foreach ($days as $day) {
+                $completions_by_date[$day['date']] = $habit->completions
+                    ->where('completed_date', '>=', \Carbon\Carbon::parse($day['date'])->startOfDay())
+                    ->where('completed_date', '<=', \Carbon\Carbon::parse($day['date'])->endOfDay())
+                    ->isNotEmpty();
+            }
+            $habit->setAttribute('completions_by_date', $completions_by_date);
         });
 
-        return view('dashboard', compact('habits'));
+        return view('dashboard', compact('habits', 'days'));
     }
 
     public function index()
@@ -92,13 +108,13 @@ class HabitController extends Controller
 
         $date = $request->input('date', now()->format('Y-m-d'));
 
-        $completion = $habit->completions()->where('completed_date', $date)->first();
+        $completion = $habit->completions()->whereDate('completed_date', $date)->first();
 
         if ($completion) {
             $completion->delete();
             $message = 'Habit marked as incomplete.';
         } else {
-            $habit->completions()->create(['completed_date' => $date]);
+            $habit->completions()->create(['completed_date' => $date . ' 00:00:00']);
             $message = 'Habit marked as complete!';
         }
 

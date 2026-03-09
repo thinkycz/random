@@ -44,25 +44,36 @@ class HabitTest extends TestCase
         $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
 
         $today = now()->format('Y-m-d');
+        $yesterday = now()->subDay()->format('Y-m-d');
 
-        // Complete
+        // Complete today
         $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle", [
             'date' => $today,
         ]);
 
         $this->assertDatabaseHas('habit_completions', [
             'habit_id' => $habit->id,
-            'completed_date' => $today,
+            'completed_date' => $today . ' 00:00:00',
         ]);
 
-        // Uncomplete
+        // Uncomplete today
         $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle", [
             'date' => $today,
         ]);
 
         $this->assertDatabaseMissing('habit_completions', [
             'habit_id' => $habit->id,
-            'completed_date' => $today,
+            'completed_date' => $today . ' 00:00:00',
+        ]);
+
+        // Complete yesterday
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle", [
+            'date' => $yesterday,
+        ]);
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => $yesterday . ' 00:00:00',
         ]);
     }
 }

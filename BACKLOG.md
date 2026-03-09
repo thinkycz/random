@@ -3,7 +3,7 @@
 Each item should have a rough priority: High, Medium, Low.
 
 ## Prioritized Next Features
-- **[High] Weekly View Dashboard:** Instead of just today, show a 7-day view (e.g., Sunday-Saturday) allowing users to check off habits for previous days easily.
+- **[High] Pagination for Weekly View Dashboard:** Allow users to navigate the weekly view dashboard forward or backwards by a week at a time.
 - **[Medium] Streak Calculation:** Calculate and display the current and longest streak for a habit on its view page.
 - **[Medium] Data Visualization:** Add a simple chart to the dashboard showing completion percentages over the last 30 days.
 - **[Low] Habit Archiving:** Allow users to hide a habit without deleting its history.
@@ -13,7 +13,6 @@ Each item should have a rough priority: High, Medium, Low.
 - **[Medium] Timezone Bug:** Currently, "today" uses the server's timezone. This could mean a habit marked at 11 PM local time is recorded as "tomorrow" if the server is ahead. A solution is needed (e.g., passing user's timezone from JS or storing it in the profile).
 
 ## UX Improvements
-- **[High] Empty States:** Replace text-only empty states with visually appealing illustrations or SVGs.
 - **[Medium] Drag and Drop Ordering:** Allow users to reorder habits and categories rather than sorting alphabetically or by creation date.
 - **[Medium] Better Color Picker:** The native HTML5 color picker is basic. Consider a nicer, accessible color palette selection.
 
