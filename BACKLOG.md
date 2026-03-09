@@ -3,7 +3,6 @@
 Each item should have a rough priority: High, Medium, Low.
 
 ## Prioritized Next Features
-- **[High] Weekly View Dashboard:** Instead of just today, show a 7-day view (e.g., Sunday-Saturday) allowing users to check off habits for previous days easily.
 - **[Medium] Streak Calculation:** Calculate and display the current and longest streak for a habit on its view page.
 - **[Medium] Data Visualization:** Add a simple chart to the dashboard showing completion percentages over the last 30 days.
 - **[Low] Habit Archiving:** Allow users to hide a habit without deleting its history.

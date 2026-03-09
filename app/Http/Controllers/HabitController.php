@@ -9,14 +9,30 @@ class HabitController extends Controller
 {
     public function dashboard()
     {
-        $habits = auth()->user()->habits()->with('category')->get();
-        $today = now()->format('Y-m-d');
+        $habits = auth()->user()->habits()->with(['category', 'completions' => function ($query) {
+            $query->where('completed_date', '>=', now()->subDays(6)->format('Y-m-d'));
+        }])->get();
 
-        $habits->each(function ($habit) use ($today) {
-            $habit->is_completed_today = $habit->completions()->where('completed_date', $today)->exists();
+        $days = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i);
+            $days[] = [
+                'date' => $date->format('Y-m-d'),
+                'name' => $date->format('D'),
+                'day' => $date->format('j'),
+            ];
+        }
+
+        $habits->each(function ($habit) use ($days) {
+            $completions = $habit->completions->pluck('completed_date')->map(fn($date) => $date->format('Y-m-d'))->toArray();
+            $completions_by_day = [];
+            foreach ($days as $day) {
+                $completions_by_day[$day['date']] = in_array($day['date'], $completions);
+            }
+            $habit->setAttribute('completions_by_day', $completions_by_day);
         });
 
-        return view('dashboard', compact('habits'));
+        return view('dashboard', compact('habits', 'days'));
     }
 
     public function index()
@@ -92,7 +108,9 @@ class HabitController extends Controller
 
         $date = $request->input('date', now()->format('Y-m-d'));
 
-        $completion = $habit->completions()->where('completed_date', $date)->first();
+        // Since completed_date is cast to a date, it stores as a datetime with 00:00:00 in SQLite/MySQL.
+        // For querying, it's safer to use date casting or query by date.
+        $completion = $habit->completions()->whereDate('completed_date', $date)->first();
 
         if ($completion) {
             $completion->delete();

@@ -3,7 +3,7 @@
 ## Current Date/Session Summary
 **Date:** March 8, 2026
 
-**Summary:** Initial project setup and MVP implementation completed. The repository was transformed from an empty Laravel instance into a functional Habit Tracker.
+**Summary:** Replaced the "Today's Habits" list on the dashboard with a 7-day Weekly View grid. Users can now see their completion status for the last 7 days and toggle completions for past days directly from the dashboard.
 
 ## What has been completed
 - Installed Laravel Breeze and configured authentication (Blade/Tailwind).
@@ -13,17 +13,16 @@
 - Built CRUD interfaces for Habits and Categories.
 - Added basic feature tests for Habit and Category flows.
 - Established persistent tracking files and documentation.
+- Implemented a responsive 7-day Weekly View on the dashboard.
 
 ## What is in progress
-- None. (End of initial MVP session).
+- None.
 
 ## Known Issues
-- The dashboard currently lacks a way to visually scroll or select past dates; it only shows "today."
 - Users might accidentally complete habits on incorrect dates if the timezone differs between server and client. (Currently server-side timestamp is used).
 - If a category is deleted, habits associated with it lose the category but still remain. This behavior is intentional for now but needs clearer UI messaging in the future.
 
 ## Next Recommended Tasks
-- **Implement a weekly view:** Allow users to see their progress over the current week (e.g., a simple grid or a line chart).
 - **Streaks:** Calculate and display current and longest streaks for each habit.
 - **Client-Side Timezone Handling:** Ensure "today" aligns with the user's local timezone.
 - **Refactoring:** Extract completion logic into a dedicated Service or Action class if it grows more complex.
