@@ -69,4 +69,39 @@ class HabitTest extends TestCase
             'completed_date' => $today . ' 00:00:00',
         ]);
     }
+
+    public function test_streak_calculation()
+    {
+        $user = \App\Models\User::factory()->create();
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // No completions
+        $streaks = $habit->getStreaks();
+        $this->assertEquals(0, $streaks['current']);
+        $this->assertEquals(0, $streaks['longest']);
+
+        // 3 day streak ending yesterday
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now()->subDay()->format('Y-m-d')]);
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now()->subDays(2)->format('Y-m-d')]);
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now()->subDays(3)->format('Y-m-d')]);
+
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(3, $streaks['current']);
+        $this->assertEquals(3, $streaks['longest']);
+
+        // Missed today, so current streak is 3 (yesterday still counts as active).
+        // Let's also miss yesterday
+        $habit->completions()->delete();
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now()->subDays(2)->format('Y-m-d')]);
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now()->subDays(3)->format('Y-m-d')]);
+
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(0, $streaks['current']);
+        $this->assertEquals(2, $streaks['longest']);
+
+        // View habits index page to ensure it loads
+        $response = $this->actingAs($user)->get(route('habits.index'));
+        $response->assertStatus(200);
+        $response->assertSee('2</span> days', false); // Longest streak
+    }
 }

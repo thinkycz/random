@@ -65,3 +65,24 @@ This file must be append-only and contain:
 
 **Breaking changes:**
 - None.
+
+---
+
+## March 8, 2026 (Session 3)
+**Features added:**
+- Added streak calculations logic. Automatically calculates current streak and longest streak of completions.
+- Updated Habits index view to display streaks with clean icons and counts, improving UI/UX feedback to users.
+
+**Files/modules affected:**
+- `app/Models/Habit.php` (Added `getStreaks` method).
+- `app/Http/Controllers/HabitController.php` (Eager load `completions` relationship on index method).
+- `resources/views/habits/index.blade.php` (Displayed current and longest streak).
+
+**Migrations created:**
+- None.
+
+**Tests added/updated:**
+- `tests/Feature/HabitTest.php` (Added `test_streak_calculation` to verify edge cases of dates).
+
+**Breaking changes:**
+- None.

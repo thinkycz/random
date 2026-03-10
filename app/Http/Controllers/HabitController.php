@@ -37,7 +37,7 @@ class HabitController extends Controller
 
     public function index()
     {
-        $habits = auth()->user()->habits()->with('category')->latest()->get();
+        $habits = auth()->user()->habits()->with(['category', 'completions'])->latest()->get();
         return view('habits.index', compact('habits'));
     }
 

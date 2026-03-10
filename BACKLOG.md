@@ -3,7 +3,6 @@
 Each item should have a rough priority: High, Medium, Low.
 
 ## Prioritized Next Features
-- **[Medium] Streak Calculation:** Calculate and display the current and longest streak for a habit on its view page.
 - **[Medium] Data Visualization:** Add a simple chart to the dashboard showing completion percentages over the last 30 days.
 - **[Low] Habit Archiving:** Allow users to hide a habit without deleting its history.
 - **[Low] Sharing/Leaderboards:** Let users share their progress with friends.
@@ -22,5 +21,4 @@ Each item should have a rough priority: High, Medium, Low.
 
 ## Testing Tasks
 - **[High] Timezone Tests:** Write tests simulating users in different timezones marking a habit complete.
-- **[Medium] Streak Calculation Tests:** Write tests to ensure streaks correctly reset if a day is missed, but are maintained if contiguous.
 - **[Low] Front-End Testing:** Add basic browser tests (e.g., using Laravel Dusk or Pest) for the toggle button interaction.
