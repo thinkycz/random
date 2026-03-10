@@ -8,6 +8,8 @@ use Tests\TestCase;
 
 class HabitTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * A basic feature test example.
      */
@@ -20,6 +22,8 @@ class HabitTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee($habit->name);
+        $response->assertSee('Habit Progress');
+        $response->assertSee('Today');
     }
 
     public function test_user_can_create_habit(): void
