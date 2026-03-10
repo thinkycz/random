@@ -3,7 +3,7 @@
 ## Current Date/Session Summary
 **Date:** March 8, 2026
 
-**Summary:** Replaced the "Today's Habits" list on the dashboard with a 7-day Weekly View grid. Users can now see their completion status for the last 7 days and toggle completions for past days directly from the dashboard.
+**Summary:** Added Streak calculation logic. Habits now automatically calculate their current and longest daily streak. These streaks are displayed cleanly on the Habits Index page.
 
 ## What has been completed
 - Installed Laravel Breeze and configured authentication (Blade/Tailwind).
@@ -14,6 +14,7 @@
 - Added basic feature tests for Habit and Category flows.
 - Established persistent tracking files and documentation.
 - Implemented a responsive 7-day Weekly View on the dashboard.
+- Implemented current and longest streak calculations and displayed them on the Habits index page.
 
 ## What is in progress
 - None.
@@ -23,9 +24,9 @@
 - If a category is deleted, habits associated with it lose the category but still remain. This behavior is intentional for now but needs clearer UI messaging in the future.
 
 ## Next Recommended Tasks
-- **Streaks:** Calculate and display current and longest streaks for each habit.
 - **Client-Side Timezone Handling:** Ensure "today" aligns with the user's local timezone.
 - **Refactoring:** Extract completion logic into a dedicated Service or Action class if it grows more complex.
+- **Data Visualization:** Add a simple chart to the dashboard showing completion percentages over the last 30 days.
 
 ## Technical Debt Notes
 - The "toggle" logic in `HabitController` is directly manipulating completions and dates based on server time. This works for MVP but could lead to bugs if the user is in a timezone where "today" differs from UTC.
