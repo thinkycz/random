@@ -104,4 +104,37 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_user_timezone_handling(): void
+    {
+        // Set a fixed UTC time where the day is different in a specific timezone
+        // UTC: 2026-03-08 02:00:00 (March 8)
+        // America/Los_Angeles (PST): 2026-03-07 18:00:00 (March 7)
+        $this->travelTo(\Carbon\Carbon::parse('2026-03-08 02:00:00', 'UTC'));
+
+        $user = \App\Models\User::factory()->create(['timezone' => 'America/Los_Angeles']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertStatus(200);
+
+        // Assert we see March 7 as the current day in the dashboard, not March 8
+        $response->assertSee('2026-03-07');
+        $response->assertDontSee('2026-03-08');
+
+        // Test toggling with the timezone-adjusted date
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle", [
+            'date' => '2026-03-07',
+        ]);
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => '2026-03-07 00:00:00',
+        ]);
+
+        // Assert streak is calculated based on timezone
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(1, $streaks['current']);
+    }
 }
