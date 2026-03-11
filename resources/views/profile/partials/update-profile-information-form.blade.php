@@ -47,6 +47,18 @@
             @endif
         </div>
 
+        <div>
+            <x-input-label for="timezone" :value="__('Timezone')" />
+            <select id="timezone" name="timezone" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full">
+                @foreach (timezone_identifiers_list() as $timezone)
+                    <option value="{{ $timezone }}" {{ old('timezone', $user->timezone ?? 'UTC') === $timezone ? 'selected' : '' }}>
+                        {{ $timezone }}
+                    </option>
+                @endforeach
+            </select>
+            <x-input-error class="mt-2" :messages="$errors->get('timezone')" />
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 
