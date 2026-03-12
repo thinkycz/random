@@ -71,6 +71,11 @@
                                         </td>
                                         <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
                                             <a href="{{ route('habits.edit', $habit) }}" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
+                                            <form action="{{ route('habits.archive', $habit) }}" method="POST" class="inline-block mr-4">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="text-gray-600 hover:text-gray-900" onclick="return confirm('Are you sure you want to archive this habit?')">Archive</button>
+                                            </form>
                                             <form action="{{ route('habits.destroy', $habit) }}" method="POST" class="inline-block">
                                                 @csrf
                                                 @method('DELETE')
@@ -84,6 +89,53 @@
                     @endif
                 </div>
             </div>
+
+            @if($archivedHabits->isNotEmpty())
+                <div class="mt-8 bg-white overflow-hidden shadow-sm sm:rounded-lg opacity-75">
+                    <div class="p-6 text-gray-900">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Archived Habits</h3>
+                        <table class="min-w-full divide-y divide-gray-300">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0">Name</th>
+                                    <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Category</th>
+                                    <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-0">
+                                        <span class="sr-only">Actions</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                @foreach($archivedHabits as $habit)
+                                    <tr>
+                                        <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-500 sm:pl-0">
+                                            <div>{{ $habit->name }}</div>
+                                        </td>
+                                        <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-400">
+                                            @if($habit->category)
+                                                {{ $habit->category->name }}
+                                            @else
+                                                None
+                                            @endif
+                                        </td>
+                                        <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
+                                            <form action="{{ route('habits.unarchive', $habit) }}" method="POST" class="inline-block mr-4">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="text-indigo-600 hover:text-indigo-900">Unarchive</button>
+                                            </form>
+                                            <form action="{{ route('habits.destroy', $habit) }}" method="POST" class="inline-block">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure you want to delete this habit permanently?')">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </x-app-layout>

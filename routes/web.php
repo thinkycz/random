@@ -19,6 +19,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('categories', \App\Http\Controllers\CategoryController::class);
     Route::resource('habits', \App\Http\Controllers\HabitController::class);
     Route::post('/habits/{habit}/toggle', [\App\Http\Controllers\HabitController::class, 'toggle'])->name('habits.toggle');
+    Route::patch('/habits/{habit}/archive', [\App\Http\Controllers\HabitController::class, 'archive'])->name('habits.archive');
+    Route::patch('/habits/{habit}/unarchive', [\App\Http\Controllers\HabitController::class, 'unarchive'])->name('habits.unarchive');
 });
 
 require __DIR__.'/auth.php';

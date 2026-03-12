@@ -70,6 +70,44 @@ class HabitTest extends TestCase
         ]);
     }
 
+    public function test_user_can_archive_and_unarchive_habit(): void
+    {
+        $user = \App\Models\User::factory()->create();
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // Dashboard should see habit initially
+        $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertSee($habit->name);
+
+        // Archive habit
+        $response = $this->actingAs($user)->patch("/habits/{$habit->id}/archive");
+        $response->assertRedirect('/habits');
+
+        $this->assertDatabaseHas('habits', [
+            'id' => $habit->id,
+        ]);
+        $this->assertNotNull($habit->fresh()->archived_at);
+
+        // Dashboard should NOT see archived habit
+        $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertDontSee($habit->name);
+
+        // Index should see it in archived section
+        $response = $this->actingAs($user)->get('/habits');
+        $response->assertSee('Archived Habits');
+        $response->assertSee($habit->name);
+
+        // Unarchive habit
+        $response = $this->actingAs($user)->patch("/habits/{$habit->id}/unarchive");
+        $response->assertRedirect('/habits');
+
+        $this->assertNull($habit->fresh()->archived_at);
+
+        // Dashboard should see it again
+        $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertSee($habit->name);
+    }
+
     public function test_streak_calculation()
     {
         $user = \App\Models\User::factory()->create();

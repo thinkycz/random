@@ -9,7 +9,7 @@ class HabitController extends Controller
 {
     public function dashboard()
     {
-        $habits = auth()->user()->habits()->with(['category', 'completions' => function ($query) {
+        $habits = auth()->user()->habits()->whereNull('archived_at')->with(['category', 'completions' => function ($query) {
             $query->where('completed_date', '>=', now()->subDays(6)->format('Y-m-d'));
         }])->get();
 
@@ -37,8 +37,9 @@ class HabitController extends Controller
 
     public function index()
     {
-        $habits = auth()->user()->habits()->with(['category', 'completions'])->latest()->get();
-        return view('habits.index', compact('habits'));
+        $habits = auth()->user()->habits()->whereNull('archived_at')->with(['category', 'completions'])->latest()->get();
+        $archivedHabits = auth()->user()->habits()->whereNotNull('archived_at')->with(['category', 'completions'])->latest()->get();
+        return view('habits.index', compact('habits', 'archivedHabits'));
     }
 
     public function create()
@@ -100,6 +101,24 @@ class HabitController extends Controller
         $habit->delete();
 
         return redirect()->route('habits.index')->with('success', 'Habit deleted successfully.');
+    }
+
+    public function archive(Habit $habit)
+    {
+        if ($habit->user_id !== auth()->id()) abort(403);
+
+        $habit->update(['archived_at' => now()]);
+
+        return redirect()->route('habits.index')->with('success', 'Habit archived successfully.');
+    }
+
+    public function unarchive(Habit $habit)
+    {
+        if ($habit->user_id !== auth()->id()) abort(403);
+
+        $habit->update(['archived_at' => null]);
+
+        return redirect()->route('habits.index')->with('success', 'Habit unarchived successfully.');
     }
 
     public function toggle(Request $request, Habit $habit)
