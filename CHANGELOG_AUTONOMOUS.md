@@ -68,6 +68,30 @@ This file must be append-only and contain:
 
 ---
 
+## March 12, 2026
+**Features added:**
+- Implemented Habit Archiving functionality.
+- Added `archived_at` column to `habits` table.
+- Added archive and unarchive buttons in the Habits index view.
+- Archived habits are hidden from the dashboard but retained in a new "Archived Habits" section on the index page.
+
+**Files/modules affected:**
+- `app/Models/Habit.php` (Added `archived_at` to `$fillable` and `casts()`).
+- `app/Http/Controllers/HabitController.php` (Filtered dashboard and split index; added `archive()` and `unarchive()`).
+- `routes/web.php` (Added `habits.archive` and `habits.unarchive` routes).
+- `resources/views/habits/index.blade.php` (Updated view with new buttons and section).
+
+**Migrations created:**
+- `2026_03_12_095648_add_archived_at_to_habits_table.php`
+
+**Tests added/updated:**
+- `tests/Feature/HabitTest.php` (Added `test_user_can_archive_and_unarchive_habit`).
+
+**Breaking changes:**
+- None.
+
+---
+
 ## March 8, 2026 (Session 3)
 **Features added:**
 - Added streak calculations logic. Automatically calculates current streak and longest streak of completions.

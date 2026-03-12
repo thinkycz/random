@@ -14,7 +14,15 @@ class Habit extends Model
         'category_id',
         'name',
         'description',
+        'archived_at',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'archived_at' => 'datetime',
+        ];
+    }
 
     public function user()
     {

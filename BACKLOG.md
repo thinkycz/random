@@ -4,7 +4,6 @@ Each item should have a rough priority: High, Medium, Low.
 
 ## Prioritized Next Features
 - **[Medium] Data Visualization:** Add a simple chart to the dashboard showing completion percentages over the last 30 days.
-- **[Low] Habit Archiving:** Allow users to hide a habit without deleting its history.
 - **[Low] Sharing/Leaderboards:** Let users share their progress with friends.
 
 ## Bug Fixes
