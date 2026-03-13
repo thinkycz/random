@@ -104,4 +104,21 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_streak_calculation_with_timezone()
+    {
+        // Test with a user in a specific timezone, ensuring that "today" correctly matches their timezone
+        $user = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        $tokyoToday = now()->setTimezone('Asia/Tokyo')->format('Y-m-d');
+        $tokyoYesterday = now()->setTimezone('Asia/Tokyo')->subDay()->format('Y-m-d');
+
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => $tokyoToday]);
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => $tokyoYesterday]);
+
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(2, $streaks['current']);
+        $this->assertEquals(2, $streaks['longest']);
+    }
 }
