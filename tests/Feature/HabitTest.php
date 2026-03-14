@@ -70,6 +70,28 @@ class HabitTest extends TestCase
         ]);
     }
 
+    public function test_timezone_handling()
+    {
+        // Set up user in a timezone where it's already "tomorrow" compared to UTC
+        // For example, if it's 23:00 UTC, it's 08:00 +1 day in Asia/Tokyo
+        $user = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        $tokyoToday = now('Asia/Tokyo')->format('Y-m-d');
+
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle");
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => $tokyoToday . ' 00:00:00',
+        ]);
+
+        // Dashboard should use Tokyo's today
+        $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertStatus(200);
+        $response->assertSee(now('Asia/Tokyo')->format('j')); // Tokyo's day number
+    }
+
     public function test_streak_calculation()
     {
         $user = \App\Models\User::factory()->create();
