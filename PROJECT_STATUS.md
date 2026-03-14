@@ -1,9 +1,9 @@
 # Project Status
 
 ## Current Date/Session Summary
-**Date:** March 8, 2026
+**Date:** March 14, 2026
 
-**Summary:** Added Streak calculation logic. Habits now automatically calculate their current and longest daily streak. These streaks are displayed cleanly on the Habits Index page.
+**Summary:** Fixed the timezone bug where habit completions were tied to the server's timezone. Added a `timezone` field to the User model, updated the profile settings UI so users can select their timezone, and updated the habit controller and model to calculate "today" relative to the user's specific timezone.
 
 ## What has been completed
 - Installed Laravel Breeze and configured authentication (Blade/Tailwind).
@@ -20,16 +20,13 @@
 - None.
 
 ## Known Issues
-- Users might accidentally complete habits on incorrect dates if the timezone differs between server and client. (Currently server-side timestamp is used).
 - If a category is deleted, habits associated with it lose the category but still remain. This behavior is intentional for now but needs clearer UI messaging in the future.
 
 ## Next Recommended Tasks
-- **Client-Side Timezone Handling:** Ensure "today" aligns with the user's local timezone.
 - **Refactoring:** Extract completion logic into a dedicated Service or Action class if it grows more complex.
 - **Data Visualization:** Add a simple chart to the dashboard showing completion percentages over the last 30 days.
 
 ## Technical Debt Notes
-- The "toggle" logic in `HabitController` is directly manipulating completions and dates based on server time. This works for MVP but could lead to bugs if the user is in a timezone where "today" differs from UTC.
 - UI empty states are basic text; they could benefit from simple illustrations or icons.
 
 ## Test Coverage Notes
@@ -39,8 +36,9 @@
   - Viewing habits on the dashboard.
   - Creating habits.
   - Toggling habit completions.
+  - Timezone handling when toggling and viewing streaks.
   - Asserting users cannot view/edit others' data (authorization).
-- Test coverage is moderate. Edge cases, like timezone issues, are not yet tested.
+- Test coverage is moderate. Edge cases and timezone variations are covered in `HabitTest`.
 
 ## Setup or Environment Notes
 - **Database:** SQLite is used locally.
