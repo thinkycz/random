@@ -68,6 +68,33 @@ This file must be append-only and contain:
 
 ---
 
+## March 15, 2026
+**Features added:**
+- Added `timezone` to the `User` model, defaulting to 'UTC'.
+- Added a timezone dropdown to the profile update form.
+- Applied timezone conversion to habit completion dates (dashboard display and toggling).
+- Updated streak calculation logic to depend on the user's localized "today" and "yesterday".
+
+**Files/modules affected:**
+- `app/Models/User.php` (Added `timezone` fillable).
+- `app/Models/Habit.php` (Updated `getStreaks` with localized time logic).
+- `app/Http/Requests/ProfileUpdateRequest.php` (Validated `timezone`).
+- `app/Http/Controllers/HabitController.php` (Used timezone for dates).
+- `resources/views/profile/partials/update-profile-information-form.blade.php` (Added timezone input).
+- `resources/views/dashboard.blade.php` (Updated active column check to use timezone).
+
+**Migrations created:**
+- `2026_03_15_094857_add_timezone_to_users_table.php`
+
+**Tests added/updated:**
+- `tests/Feature/ProfileTest.php` (Added timezone to tests, updated existing assertions).
+- `tests/Feature/HabitTest.php` (Added `test_user_timezone_affects_today`).
+
+**Breaking changes:**
+- None.
+
+---
+
 ## March 8, 2026 (Session 3)
 **Features added:**
 - Added streak calculations logic. Automatically calculates current streak and longest streak of completions.
