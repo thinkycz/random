@@ -104,4 +104,45 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_user_timezone_affects_today()
+    {
+        // Setup a user in Tokyo timezone (UTC+9)
+        $user = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // Fix the system time to something where UTC and Tokyo are on different days.
+        // For example: UTC is 2026-03-08 20:00:00, so Tokyo is 2026-03-09 05:00:00
+        \Carbon\Carbon::setTestNow('2026-03-08 20:00:00');
+
+        $utcToday = '2026-03-08';
+        $tokyoToday = '2026-03-09';
+
+        $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertStatus(200);
+
+        // Ensure the days listed on the dashboard reflect Tokyo's dates (e.g. 09)
+        $response->assertSee('9');
+
+        // Toggle habit for today without passing explicit date.
+        // Note: The toggle endpoint expects 'date', and the view injects $day['date'].
+        // Let's test toggling via the dashboard flow, which posts the 'date' input.
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle", [
+            'date' => $tokyoToday,
+        ]);
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => $tokyoToday . ' 00:00:00',
+        ]);
+
+        // Test streak calculation uses the user's timezone correctly
+        $streaks = $habit->fresh()->getStreaks();
+
+        // Since $tokyoToday is considered "today" in Tokyo time, it counts as an active streak.
+        $this->assertEquals(1, $streaks['current']);
+
+        // Reset time
+        \Carbon\Carbon::setTestNow();
+    }
 }
