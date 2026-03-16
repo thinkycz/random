@@ -104,4 +104,27 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_habit_completion_respects_user_timezone(): void
+    {
+        // Create user in a timezone way ahead of UTC
+        $user = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']); // UTC+9
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // Fix the application time to a specific UTC time
+        // E.g., UTC: 2026-03-08 20:00:00 (8 PM)
+        // Tokyo: 2026-03-09 05:00:00 (5 AM, next day)
+        \Carbon\Carbon::setTestNow('2026-03-08 20:00:00');
+
+        $expectedTokyoDate = '2026-03-09';
+
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle");
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => $expectedTokyoDate . ' 00:00:00',
+        ]);
+
+        \Carbon\Carbon::setTestNow(); // Reset time
+    }
 }
