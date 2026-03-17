@@ -70,6 +70,44 @@ class HabitTest extends TestCase
         ]);
     }
 
+    public function test_user_timezone_handling()
+    {
+        $user = \App\Models\User::factory()->create([
+            'timezone' => 'Asia/Tokyo', // UTC+9
+        ]);
+
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // Freeze time to midnight UTC (so Tokyo is 9am same day)
+        \Carbon\Carbon::setTestNow('2023-01-01 00:00:00');
+
+        $tokyoToday = now()->timezone('Asia/Tokyo')->format('Y-m-d');
+
+        // Toggle habit (which should use Tokyo time)
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle", []);
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => '2023-01-01 00:00:00', // Still same day in both
+        ]);
+
+        // Clear completions
+        $habit->completions()->delete();
+
+        // Freeze time to 10pm UTC (so Tokyo is 7am NEXT day)
+        \Carbon\Carbon::setTestNow('2023-01-01 22:00:00');
+
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle", []);
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => '2023-01-02 00:00:00', // Next day for Tokyo!
+        ]);
+
+        // Reset time
+        \Carbon\Carbon::setTestNow();
+    }
+
     public function test_streak_calculation()
     {
         $user = \App\Models\User::factory()->create();
