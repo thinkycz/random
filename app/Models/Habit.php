@@ -49,16 +49,17 @@ class Habit extends Model
         $currentStreak = 0;
         $longestStreak = 0;
 
-        $today = now()->format('Y-m-d');
-        $yesterday = now()->subDay()->format('Y-m-d');
+        $tz = $this->user->timezone ?? 'UTC';
+        $today = now($tz)->format('Y-m-d');
+        $yesterday = now($tz)->subDay()->format('Y-m-d');
 
         $i = 0;
         $activeStreakDate = null;
 
         if ($completions[0] === $today) {
-            $activeStreakDate = now();
+            $activeStreakDate = now($tz);
         } elseif ($completions[0] === $yesterday) {
-            $activeStreakDate = now()->subDay();
+            $activeStreakDate = now($tz)->subDay();
         }
 
         if ($activeStreakDate) {
