@@ -1,9 +1,9 @@
 # Project Status
 
 ## Current Date/Session Summary
-**Date:** March 8, 2026
+**Date:** March 18, 2026
 
-**Summary:** Added Streak calculation logic. Habits now automatically calculate their current and longest daily streak. These streaks are displayed cleanly on the Habits Index page.
+**Summary:** Resolved the "Timezone Bug" by allowing users to select their local timezone in their profile settings. Habit calculations (like dashboard daily view, completions toggle, and streaks) now respect this timezone instead of relying on the server's UTC time.
 
 ## What has been completed
 - Installed Laravel Breeze and configured authentication (Blade/Tailwind).
@@ -15,16 +15,16 @@
 - Established persistent tracking files and documentation.
 - Implemented a responsive 7-day Weekly View on the dashboard.
 - Implemented current and longest streak calculations and displayed them on the Habits index page.
+- Added a `timezone` column to users table and profile edit UI.
+- Updated dates handling in logic across controllers and models to respect the user's local timezone.
 
 ## What is in progress
 - None.
 
 ## Known Issues
-- Users might accidentally complete habits on incorrect dates if the timezone differs between server and client. (Currently server-side timestamp is used).
 - If a category is deleted, habits associated with it lose the category but still remain. This behavior is intentional for now but needs clearer UI messaging in the future.
 
 ## Next Recommended Tasks
-- **Client-Side Timezone Handling:** Ensure "today" aligns with the user's local timezone.
 - **Refactoring:** Extract completion logic into a dedicated Service or Action class if it grows more complex.
 - **Data Visualization:** Add a simple chart to the dashboard showing completion percentages over the last 30 days.
 
