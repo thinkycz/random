@@ -9,13 +9,16 @@ class HabitController extends Controller
 {
     public function dashboard()
     {
-        $habits = auth()->user()->habits()->with(['category', 'completions' => function ($query) {
-            $query->where('completed_date', '>=', now()->subDays(6)->format('Y-m-d'));
+        $userTimezone = auth()->user()->timezone ?? 'UTC';
+        $today = now()->setTimezone($userTimezone);
+
+        $habits = auth()->user()->habits()->with(['category', 'completions' => function ($query) use ($today) {
+            $query->where('completed_date', '>=', $today->copy()->subDays(6)->format('Y-m-d'));
         }])->get();
 
         $days = [];
         for ($i = 6; $i >= 0; $i--) {
-            $date = now()->subDays($i);
+            $date = $today->copy()->subDays($i);
             $days[] = [
                 'date' => $date->format('Y-m-d'),
                 'name' => $date->format('D'),
@@ -32,7 +35,7 @@ class HabitController extends Controller
             $habit->setAttribute('completions_by_day', $completions_by_day);
         });
 
-        return view('dashboard', compact('habits', 'days'));
+        return view('dashboard', compact('habits', 'days', 'userTimezone'));
     }
 
     public function index()
@@ -106,7 +109,8 @@ class HabitController extends Controller
     {
         if ($habit->user_id !== auth()->id()) abort(403);
 
-        $date = $request->input('date', now()->format('Y-m-d'));
+        $userTimezone = auth()->user()->timezone ?? 'UTC';
+        $date = $request->input('date', now()->setTimezone($userTimezone)->format('Y-m-d'));
 
         // Since completed_date is cast to a date, it stores as a datetime with 00:00:00 in SQLite/MySQL.
         // For querying, it's safer to use date casting or query by date.
