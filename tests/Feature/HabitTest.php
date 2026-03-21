@@ -104,4 +104,36 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_timezone_is_respected_for_today(): void
+    {
+        // Let's create a scenario where UTC is one day, but user's timezone is another.
+        // E.g., UTC is 2026-03-21 00:00:00, but user in 'Asia/Tokyo' (+9) is 2026-03-21 09:00:00
+        // Or UTC is 2026-03-21 23:00:00, but user in 'Asia/Tokyo' (+9) is 2026-03-22 08:00:00
+
+        // We can simulate this by mocking the current time.
+        \Carbon\Carbon::setTestNow('2026-03-21 23:00:00'); // UTC time
+
+        $user = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // When user toggles completion without passing a date, it should use THEIR "today", which is 2026-03-22
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle");
+
+        $response->assertSessionHas('success', 'Habit marked as complete!');
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => '2026-03-22 00:00:00',
+        ]);
+
+        // When viewing dashboard, the days should align with user timezone (ending on 2026-03-22)
+        $dashboardResponse = $this->actingAs($user)->get('/dashboard');
+        $dashboardResponse->assertStatus(200);
+
+        // Dashboard should show 22 as a day
+        $dashboardResponse->assertSee('22');
+
+        \Carbon\Carbon::setTestNow(); // Reset mock
+    }
 }
