@@ -104,4 +104,32 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_habits_use_user_timezone()
+    {
+        $user = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        $tokyoNow = now()->timezone('Asia/Tokyo');
+        $tokyoToday = $tokyoNow->format('Y-m-d');
+        $tokyoYesterday = $tokyoNow->copy()->subDay()->format('Y-m-d');
+
+        // Complete habit for Tokyo today
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => $tokyoToday]);
+
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(1, $streaks['current']);
+
+        // Check dashboard uses Tokyo timezone (shows Tokyo's today's day number)
+        $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertStatus(200);
+        $response->assertSee($tokyoNow->format('j'));
+
+        // If we complete for Tokyo yesterday instead
+        $habit->completions()->delete();
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => $tokyoYesterday]);
+
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(1, $streaks['current']); // Active streak if missed today but completed yesterday
+    }
 }
