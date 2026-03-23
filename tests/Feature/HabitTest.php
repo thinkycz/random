@@ -104,4 +104,42 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_streak_calculation_respects_timezone()
+    {
+        // Create user in a specific timezone
+        $user = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']); // UTC+9
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // Freeze time to a specific UTC time where the day is different in Tokyo
+        // e.g., 2026-03-08 22:00:00 UTC is 2026-03-09 07:00:00 in Tokyo
+        $knownDate = \Carbon\Carbon::parse('2026-03-08 22:00:00', 'UTC');
+        \Carbon\Carbon::setTestNow($knownDate);
+
+        // In Tokyo, "today" is '2026-03-09'
+        // "yesterday" is '2026-03-08'
+
+        // Let's create a completion for '2026-03-08'
+        // This is yesterday in Tokyo
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => '2026-03-08']);
+
+        $streaks = $habit->fresh()->getStreaks();
+
+        // Since the completion is "yesterday" (Tokyo time), the current streak is 1 and it's active
+        $this->assertEquals(1, $streaks['current']);
+
+        // Now if the user's timezone was Pacific/Midway (UTC-11), it would be 2026-03-08 11:00:00
+        // "today" is '2026-03-08'
+        // So a completion on '2026-03-08' is "today" for Midway.
+        $userMidway = \App\Models\User::factory()->create(['timezone' => 'Pacific/Midway']);
+        $habitMidway = \App\Models\Habit::factory()->create(['user_id' => $userMidway->id]);
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habitMidway->id, 'completed_date' => '2026-03-08']);
+
+        $streaksMidway = $habitMidway->fresh()->getStreaks();
+
+        // Since the completion is "today" (Midway time), the current streak is 1
+        $this->assertEquals(1, $streaksMidway['current']);
+
+        \Carbon\Carbon::setTestNow(); // Reset time
+    }
 }
