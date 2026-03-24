@@ -1,9 +1,9 @@
 # Project Status
 
 ## Current Date/Session Summary
-**Date:** March 8, 2026
+**Date:** March 24, 2026
 
-**Summary:** Added Streak calculation logic. Habits now automatically calculate their current and longest daily streak. These streaks are displayed cleanly on the Habits Index page.
+**Summary:** Added timezone support for users. Users can now select their timezone in their profile settings. Dashboard dates, completions, and streak calculations now properly respect the user's local timezone rather than relying strictly on the server's UTC time.
 
 ## What has been completed
 - Installed Laravel Breeze and configured authentication (Blade/Tailwind).
@@ -15,21 +15,22 @@
 - Established persistent tracking files and documentation.
 - Implemented a responsive 7-day Weekly View on the dashboard.
 - Implemented current and longest streak calculations and displayed them on the Habits index page.
+- Fixed the timezone bug where completions and dates didn't align with users outside of UTC.
+- Added extensive feature tests for timezone behaviors.
 
 ## What is in progress
 - None.
 
 ## Known Issues
-- Users might accidentally complete habits on incorrect dates if the timezone differs between server and client. (Currently server-side timestamp is used).
 - If a category is deleted, habits associated with it lose the category but still remain. This behavior is intentional for now but needs clearer UI messaging in the future.
 
 ## Next Recommended Tasks
-- **Client-Side Timezone Handling:** Ensure "today" aligns with the user's local timezone.
-- **Refactoring:** Extract completion logic into a dedicated Service or Action class if it grows more complex.
 - **Data Visualization:** Add a simple chart to the dashboard showing completion percentages over the last 30 days.
+- **Refactoring:** Extract completion logic into a dedicated Service or Action class if it grows more complex.
+- **Empty States:** Replace text-only empty states with visually appealing illustrations or SVGs.
 
 ## Technical Debt Notes
-- The "toggle" logic in `HabitController` is directly manipulating completions and dates based on server time. This works for MVP but could lead to bugs if the user is in a timezone where "today" differs from UTC.
+- The "toggle" logic in `HabitController` works but handles several responsibilities. Consider extracting this logic as the app grows.
 - UI empty states are basic text; they could benefit from simple illustrations or icons.
 
 ## Test Coverage Notes
@@ -40,7 +41,7 @@
   - Creating habits.
   - Toggling habit completions.
   - Asserting users cannot view/edit others' data (authorization).
-- Test coverage is moderate. Edge cases, like timezone issues, are not yet tested.
+- Extensive tests added for Timezone operations (`TimezoneTest.php`) verifying streak calculation and dashboard respect timezones.
 
 ## Setup or Environment Notes
 - **Database:** SQLite is used locally.
