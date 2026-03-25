@@ -104,4 +104,29 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_streak_calculation_with_timezone()
+    {
+        // Let's pretend the server is at UTC midnight,
+        // but the user is in a timezone where it's still yesterday.
+        // We'll travel to a specific time.
+        $this->travelTo(\Carbon\Carbon::parse('2023-10-10 02:00:00', 'UTC'));
+
+        // User is in a timezone 4 hours behind UTC, so their local time is 2023-10-09 22:00:00
+        $user = \App\Models\User::factory()->create(['timezone' => 'America/New_York']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // The user completes the habit for 'today' (which is the 9th for them)
+        \App\Models\HabitCompletion::factory()->create([
+            'habit_id' => $habit->id,
+            'completed_date' => '2023-10-09'
+        ]);
+
+        $streaks = $habit->fresh()->getStreaks();
+
+        // Since it's currently 2023-10-09 in their timezone, and they completed it on 2023-10-09, current streak is 1.
+        $this->assertEquals(1, $streaks['current']);
+
+        $this->travelBack();
+    }
 }
