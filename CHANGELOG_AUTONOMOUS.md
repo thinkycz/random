@@ -68,6 +68,31 @@ This file must be append-only and contain:
 
 ---
 
+## March 26, 2026
+**Features added:**
+- Added timezone field to user model and profile edit form.
+- Application now respects user's explicit timezone for calculating "today", rendering dashboard, toggling completions, and streak calculations.
+
+**Files/modules affected:**
+- `app/Models/User.php` (Added timezone to `$fillable`).
+- `app/Models/Habit.php` (Updated streaks to use timezone).
+- `app/Http/Controllers/HabitController.php` (Updated queries/days generation to use timezone).
+- `app/Http/Requests/ProfileUpdateRequest.php` (Added timezone validation).
+- `resources/views/profile/partials/update-profile-information-form.blade.php` (Added dropdown).
+- `resources/views/dashboard.blade.php` (Updated to use timezone for "today" highlighting).
+
+**Migrations created:**
+- `add_timezone_to_users_table`
+
+**Tests added/updated:**
+- `tests/Feature/ProfileTest.php` (Updated feature test with timezone field).
+- `tests/Feature/HabitTest.php` (Updated tests with explicit timezone, added test for Tokyo timezone).
+
+**Breaking changes:**
+- None.
+
+---
+
 ## March 8, 2026 (Session 3)
 **Features added:**
 - Added streak calculations logic. Automatically calculates current streak and longest streak of completions.
