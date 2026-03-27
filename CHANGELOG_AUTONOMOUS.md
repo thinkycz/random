@@ -68,6 +68,30 @@ This file must be append-only and contain:
 
 ---
 
+## March 27, 2026 (Session 4)
+**Features added:**
+- Added user `timezone` field to user profiles to correctly handle user local time for "today".
+- Dashboard weekly view, habit streak calculations, and completions toggling logic now properly map to the user's localized timezone instead of falling back to UTC/server time.
+
+**Files/modules affected:**
+- `app/Models/User.php` (Added `timezone` to fillable).
+- `app/Models/Habit.php` (Updated timezone logic in `getStreaks()`).
+- `app/Http/Controllers/HabitController.php` (Updated timezone logic for toggles and dashboard dates).
+- `app/Http/Requests/ProfileUpdateRequest.php` (Added `timezone` validation).
+- `resources/views/profile/partials/update-profile-information-form.blade.php` (Added timezone select element).
+
+**Migrations created:**
+- `2026_03_27_095511_add_timezone_to_users_table`
+
+**Tests added/updated:**
+- `tests/Feature/HabitTest.php` (Added timezone boundary test `test_timezone_boundary_for_streaks_and_toggles`).
+- `tests/Feature/ProfileTest.php` (Updated to accommodate new `timezone` field in profile settings).
+
+**Breaking changes:**
+- None.
+
+---
+
 ## March 8, 2026 (Session 3)
 **Features added:**
 - Added streak calculations logic. Automatically calculates current streak and longest streak of completions.
