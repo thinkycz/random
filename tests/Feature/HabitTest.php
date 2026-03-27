@@ -104,4 +104,36 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_timezone_boundary_for_streaks_and_toggles(): void
+    {
+        // Set fixed server time to 23:00 UTC on a specific date
+        \Carbon\Carbon::setTestNow('2023-10-15 23:00:00');
+
+        $userInTokyo = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']);
+        // 23:00 UTC is 08:00 AM on 2023-10-16 in Asia/Tokyo
+        $tokyoToday = '2023-10-16';
+
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $userInTokyo->id]);
+
+        // Toggle habit - should mark as complete for Tokyo's today
+        $response = $this->actingAs($userInTokyo)->post("/habits/{$habit->id}/toggle");
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => $tokyoToday . ' 00:00:00',
+        ]);
+
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(1, $streaks['current']);
+        $this->assertEquals(1, $streaks['longest']);
+
+        // Check dashboard dates
+        $response = $this->actingAs($userInTokyo)->get('/dashboard');
+        $response->assertStatus(200);
+        // Dashboard should see "16" as today
+        $response->assertSee(now()->timezone('Asia/Tokyo')->format('j'));
+
+        \Carbon\Carbon::setTestNow();
+    }
 }

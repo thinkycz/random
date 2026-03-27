@@ -49,16 +49,18 @@ class Habit extends Model
         $currentStreak = 0;
         $longestStreak = 0;
 
-        $today = now()->format('Y-m-d');
-        $yesterday = now()->subDay()->format('Y-m-d');
+        // Use the habit owner's timezone to ensure consistency in background jobs or CLI
+        $userTimezone = $this->user->timezone ?? 'UTC';
+        $today = now()->timezone($userTimezone)->format('Y-m-d');
+        $yesterday = now()->timezone($userTimezone)->subDay()->format('Y-m-d');
 
         $i = 0;
         $activeStreakDate = null;
 
         if ($completions[0] === $today) {
-            $activeStreakDate = now();
+            $activeStreakDate = now()->timezone($userTimezone);
         } elseif ($completions[0] === $yesterday) {
-            $activeStreakDate = now()->subDay();
+            $activeStreakDate = now()->timezone($userTimezone)->subDay();
         }
 
         if ($activeStreakDate) {
