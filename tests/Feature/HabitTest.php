@@ -104,4 +104,39 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_user_timezone_is_respected_on_dashboard()
+    {
+        // Set server time to a specific UTC time where the date differs between UTC and another timezone.
+        // E.g., 2026-03-08 23:00:00 UTC.
+        // In UTC, today is March 8. In Asia/Tokyo (+9), today is March 9.
+        \Carbon\Carbon::setTestNow('2026-03-08 23:00:00');
+
+        $user = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertStatus(200);
+
+        // Assert we see 9 (day of month for March 9 in Tokyo)
+        $response->assertSee(now('Asia/Tokyo')->format('j'));
+        $this->assertEquals('9', now('Asia/Tokyo')->format('j'));
+    }
+
+    public function test_user_timezone_is_respected_when_toggling()
+    {
+        \Carbon\Carbon::setTestNow('2026-03-08 23:00:00');
+
+        $user = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // Toggle with NO explicit date, should default to user's 'today' (which is March 9)
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle");
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => '2026-03-09 00:00:00',
+        ]);
+    }
 }
