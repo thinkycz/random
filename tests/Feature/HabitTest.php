@@ -104,4 +104,23 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_timezone_is_respected_on_dashboard_and_toggle()
+    {
+        // Set server time to UTC mid-day to avoid edge cases initially, we'll override timezone
+        $user = \App\Models\User::factory()->create(['timezone' => 'Pacific/Auckland']); // Auckland is UTC+12/13
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        $aucklandToday = now('Pacific/Auckland')->format('Y-m-d');
+
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle", []); // empty date defaults to user's "today"
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => $aucklandToday . ' 00:00:00',
+        ]);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertStatus(200);
+        $response->assertSee(now('Pacific/Auckland')->format('j'));
+    }
 }
