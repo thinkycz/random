@@ -104,4 +104,33 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_user_timezone_affects_today_date(): void
+    {
+        // Create user in a timezone far ahead of UTC to ensure different dates (e.g. Pacific/Auckland is +12/13)
+        // Note: For this to work reliably in a test, we can use Carbon::setTestNow()
+        // to set a specific UTC time where the local time in Auckland is already the next day.
+        \Carbon\Carbon::setTestNow('2026-04-01 20:00:00'); // UTC time
+
+        $user = \App\Models\User::factory()->create(['timezone' => 'Pacific/Auckland']); // Auckland is +12 or +13, so it's 2026-04-02 there
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        $localToday = now('Pacific/Auckland')->format('Y-m-d'); // 2026-04-02
+        $utcToday = now('UTC')->format('Y-m-d'); // 2026-04-01
+
+        $this->assertNotEquals($localToday, $utcToday, "Test logic error: Local and UTC dates must be different for this test to be meaningful.");
+
+        // When toggling without passing an explicit date, it should use the local date
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle");
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => $localToday . ' 00:00:00', // Completed on local today, not UTC today
+        ]);
+
+        $this->assertDatabaseMissing('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => $utcToday . ' 00:00:00',
+        ]);
+    }
 }
