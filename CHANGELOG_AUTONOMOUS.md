@@ -68,6 +68,29 @@ This file must be append-only and contain:
 
 ---
 
+## April 3, 2026 (Session 4)
+**Features added:**
+- Added a `timezone` field to user profiles so that habit boundaries apply on a per-user basis instead of falling back to server time. This ensures day completions and streak counts are accurately calculated.
+
+**Files/modules affected:**
+- `app/Models/User.php` (Added `timezone` fillable).
+- `app/Models/Habit.php` (Updated streaks logic to use `$this->user->timezone`).
+- `app/Http/Controllers/HabitController.php` (Updated to pull user's timezone).
+- `app/Http/Requests/ProfileUpdateRequest.php` (Added timezone validation).
+- `resources/views/profile/partials/update-profile-information-form.blade.php` (Added dropdown for timezones).
+
+**Migrations created:**
+- `add_timezone_to_users_table`
+
+**Tests added/updated:**
+- `tests/Feature/HabitTest.php` (Added `test_habit_calculations_respect_user_timezone`).
+- `tests/Feature/ProfileTest.php` (Updated data structures for existing tests).
+
+**Breaking changes:**
+- None.
+
+---
+
 ## March 8, 2026 (Session 3)
 **Features added:**
 - Added streak calculations logic. Automatically calculates current streak and longest streak of completions.
