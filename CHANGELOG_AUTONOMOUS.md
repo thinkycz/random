@@ -68,6 +68,30 @@ This file must be append-only and contain:
 
 ---
 
+## April 4, 2026 (Session 4)
+**Features added:**
+- Resolved a known timezone bug. Users can now select their local timezone via their Profile settings.
+- Dates shown for "today" and the last 7 days are correctly boundary-checked based on the specific user's selected timezone.
+
+**Files/modules affected:**
+- `app/Models/User.php` (Added `timezone` fillable).
+- `app/Http/Requests/ProfileUpdateRequest.php` (Added `timezone` validation rule).
+- `resources/views/profile/partials/update-profile-information-form.blade.php` (Added timezone UI select).
+- `app/Http/Controllers/HabitController.php` (Updated to use user's timezone).
+- `app/Models/Habit.php` (Updated to use user's timezone when calculating streaks).
+
+**Migrations created:**
+- `add_timezone_to_users_table`
+
+**Tests added/updated:**
+- `tests/Feature/HabitTest.php` (Added `test_user_timezone_is_respected_for_toggles_and_dashboard`).
+- `tests/Feature/ProfileTest.php` (Updated tests to reflect the timezone profile field).
+
+**Breaking changes:**
+- None.
+
+---
+
 ## March 8, 2026 (Session 3)
 **Features added:**
 - Added streak calculations logic. Automatically calculates current streak and longest streak of completions.
