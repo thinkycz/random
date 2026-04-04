@@ -104,4 +104,29 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_user_timezone_is_respected_for_toggles_and_dashboard(): void
+    {
+        // Create user in a very specific timezone (e.g., Pacific/Auckland which is far ahead)
+        $user = \App\Models\User::factory()->create(['timezone' => 'Pacific/Auckland']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        $timezone = $user->timezone;
+        $localToday = now($timezone)->format('Y-m-d');
+
+        // Toggle habit using the user's local "today"
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle", [
+            'date' => $localToday,
+        ]);
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => $localToday . ' 00:00:00',
+        ]);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertStatus(200);
+        // Dashboard should have $localToday correctly in the day columns
+        $response->assertSee(now($timezone)->format('j'));
+    }
 }

@@ -30,6 +30,7 @@ class ProfileTest extends TestCase
             ->patch('/profile', [
                 'name' => 'Test User',
                 'email' => 'test@example.com',
+                'timezone' => 'America/New_York',
             ]);
 
         $response
@@ -40,18 +41,20 @@ class ProfileTest extends TestCase
 
         $this->assertSame('Test User', $user->name);
         $this->assertSame('test@example.com', $user->email);
+        $this->assertSame('America/New_York', $user->timezone);
         $this->assertNull($user->email_verified_at);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['timezone' => 'UTC']);
 
         $response = $this
             ->actingAs($user)
             ->patch('/profile', [
                 'name' => 'Test User',
                 'email' => $user->email,
+                'timezone' => 'UTC',
             ]);
 
         $response
