@@ -104,4 +104,38 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_streak_calculation_respects_user_timezone()
+    {
+        // Server timezone is typically UTC. Let's create a user in a far-east timezone.
+        $user = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // Tokyo is UTC+9. So "today" in Tokyo might be tomorrow in UTC.
+        $tokyoToday = now('Asia/Tokyo')->format('Y-m-d');
+        $tokyoYesterday = now('Asia/Tokyo')->subDay()->format('Y-m-d');
+
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => $tokyoToday]);
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => $tokyoYesterday]);
+
+        $streaks = $habit->fresh()->getStreaks();
+
+        $this->assertEquals(2, $streaks['current']);
+        $this->assertEquals(2, $streaks['longest']);
+
+        // Let's create a user in a far-west timezone.
+        $userWest = \App\Models\User::factory()->create(['timezone' => 'America/Los_Angeles']);
+        $habitWest = \App\Models\Habit::factory()->create(['user_id' => $userWest->id]);
+
+        $laToday = now('America/Los_Angeles')->format('Y-m-d');
+        $laYesterday = now('America/Los_Angeles')->subDay()->format('Y-m-d');
+
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habitWest->id, 'completed_date' => $laToday]);
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habitWest->id, 'completed_date' => $laYesterday]);
+
+        $streaksWest = $habitWest->fresh()->getStreaks();
+
+        $this->assertEquals(2, $streaksWest['current']);
+        $this->assertEquals(2, $streaksWest['longest']);
+    }
 }
