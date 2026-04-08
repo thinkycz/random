@@ -26,6 +26,40 @@ class HabitTest extends TestCase
         $response->assertSee(now()->format('j')); // today's day number
     }
 
+    public function test_timezone_is_respected_for_today(): void
+    {
+        // Set an explicit mock time in UTC so we have a reliable baseline
+        $now = \Carbon\Carbon::create(2026, 3, 8, 0, 30, 0, 'UTC'); // 12:30 AM UTC on Mar 8
+        \Carbon\Carbon::setTestNow($now);
+
+        // A user in America/Los_Angeles (UTC-8) should see their date as Mar 7 still
+        $user = \App\Models\User::factory()->create(['timezone' => 'America/Los_Angeles']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertStatus(200);
+
+        // LA time is Mar 7th 16:30
+        $laDate = $now->copy()->timezone('America/Los_Angeles');
+        $this->assertEquals('2026-03-07', $laDate->format('Y-m-d'));
+
+        // Dashboard should render Mar 7th as "today"
+        $response->assertSee($laDate->format('j')); // Should see 7 instead of 8
+
+        // Verify the toggle completes the habit for the user's local date
+        $this->actingAs($user)->post("/habits/{$habit->id}/toggle", [
+            // if no date provided, controller uses today in user's timezone
+        ]);
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => '2026-03-07 00:00:00',
+        ]);
+
+        \Carbon\Carbon::setTestNow(); // reset
+    }
+
     public function test_user_can_create_habit(): void
     {
         $user = \App\Models\User::factory()->create();
