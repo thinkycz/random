@@ -86,3 +86,27 @@ This file must be append-only and contain:
 
 **Breaking changes:**
 - None.
+
+---
+
+## April 9, 2026 (Session 4)
+**Features added:**
+- Implemented user-specific timezone support. Users can configure their local timezone in their Profile settings.
+- The 7-day dashboard view and streak calculations now automatically adjust to the user's local timezone instead of UTC, ensuring that days roll over precisely at midnight local time.
+
+**Files/modules affected:**
+- `app/Models/User.php` (Added timezone to fillable).
+- `app/Models/Habit.php` (Refactored `getStreaks` method to use timezone).
+- `app/Http/Controllers/HabitController.php` (Refactored `dashboard` and `toggle` to use user timezone).
+- `app/Http/Requests/ProfileUpdateRequest.php` (Added timezone validation).
+- `resources/views/profile/partials/update-profile-information-form.blade.php` (Added timezone select input).
+- `tests/Feature/ProfileTest.php` (Updated existing tests with timezone attribute).
+
+**Migrations created:**
+- `2026_04_09_085745_add_timezone_to_users_table`
+
+**Tests added/updated:**
+- `tests/Feature/HabitTest.php` (Added `test_timezone_affects_streak_calculation`).
+
+**Breaking changes:**
+- None.
