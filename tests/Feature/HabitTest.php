@@ -104,4 +104,21 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_timezone_affects_streak_calculation(): void
+    {
+        $timezone = 'Asia/Tokyo'; // Tokyo is ahead of UTC
+        $user = \App\Models\User::factory()->create(['timezone' => $timezone]);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // "Today" in Tokyo might be "Tomorrow" in UTC.
+        // Simulate completing a habit for "yesterday" in Tokyo
+        $yesterdayInTokyo = now($timezone)->subDay()->format('Y-m-d');
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => $yesterdayInTokyo]);
+
+        $streaks = $habit->fresh()->getStreaks();
+
+        // The streak should still be 1, because from the user's perspective, it was yesterday.
+        $this->assertEquals(1, $streaks['current']);
+    }
 }
