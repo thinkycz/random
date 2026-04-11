@@ -104,4 +104,43 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_habit_streak_respects_timezone()
+    {
+        // Server time is UTC. Let's create a scenario where it is 1 AM UTC.
+        // For a user in America/Los_Angeles (UTC-8), their local time is 5 PM the previous day.
+        \Carbon\Carbon::setTestNow('2026-03-08 01:00:00'); // 1 AM UTC, March 8
+
+        $user = \App\Models\User::factory()->create(['timezone' => 'America/Los_Angeles']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // "Today" for the user is March 7.
+        // If they complete the habit, it should be marked for March 7.
+        $this->actingAs($user)->post("/habits/{$habit->id}/toggle", [
+            'date' => now($user->timezone)->format('Y-m-d') // Simulate frontend passing local 'today'
+        ]);
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => '2026-03-07 00:00:00', // Completed on local March 7
+        ]);
+
+        // Streaks:
+        // Completed on March 7. So current streak is 1, longest is 1.
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(1, $streaks['current']);
+        $this->assertEquals(1, $streaks['longest']);
+
+        // Now, let's say they also completed it on March 6.
+        \App\Models\HabitCompletion::factory()->create([
+            'habit_id' => $habit->id,
+            'completed_date' => '2026-03-06 00:00:00'
+        ]);
+
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(2, $streaks['current']); // Active streak for March 6 & 7
+        $this->assertEquals(2, $streaks['longest']);
+
+        \Carbon\Carbon::setTestNow(); // Reset mock
+    }
 }
