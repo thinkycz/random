@@ -104,4 +104,34 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_timezone_handling_for_today(): void
+    {
+        // Create user in a specific timezone
+        $user = \App\Models\User::factory()->create([
+            'timezone' => 'Asia/Tokyo' // UTC+9
+        ]);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // Mock current time to a specific UTC time
+        // E.g., 2026-03-08 20:00:00 UTC
+        // In Asia/Tokyo this is 2026-03-09 05:00:00 (Next day)
+        \Carbon\Carbon::setTestNow('2026-03-08 20:00:00');
+
+        $tokyoToday = now('Asia/Tokyo')->format('Y-m-d'); // 2026-03-09
+
+        // Complete habit using default date logic (which should pick up user timezone)
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle");
+
+        // Verify it was recorded with Tokyo's today's date
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => $tokyoToday . ' 00:00:00',
+        ]);
+
+        // Dashboard should see Tokyo's today
+        $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertStatus(200);
+        $response->assertSee($tokyoToday); // should be present in the hidden inputs
+    }
 }
