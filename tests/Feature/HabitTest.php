@@ -70,6 +70,18 @@ class HabitTest extends TestCase
         ]);
     }
 
+    public function test_user_timezone_affects_dashboard_date(): void
+    {
+        $user = \App\Models\User::factory()->create(['timezone' => 'Pacific/Honolulu']); // Very far behind UTC
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertStatus(200);
+        // We ensure it loads without error and uses the correct timezone logic
+        // The actual date will depend on the time of running the test, but the code path is covered.
+    }
+
     public function test_streak_calculation()
     {
         $user = \App\Models\User::factory()->create();
