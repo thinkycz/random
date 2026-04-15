@@ -104,4 +104,56 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_timezone_affects_today_calculation(): void
+    {
+        // Create user in a timezone far ahead (e.g., Tokyo, UTC+9)
+        $userTokyo = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']);
+        $habitTokyo = \App\Models\Habit::factory()->create(['user_id' => $userTokyo->id]);
+
+        // Create user in a timezone far behind (e.g., Honolulu, UTC-10)
+        $userHonolulu = \App\Models\User::factory()->create(['timezone' => 'Pacific/Honolulu']);
+        $habitHonolulu = \App\Models\Habit::factory()->create(['user_id' => $userHonolulu->id]);
+
+        // Freeze time to a specific UTC time where the local date differs
+        // Example: 2026-03-08 22:00:00 UTC
+        // Tokyo time will be 2026-03-09 07:00:00 (Tomorrow)
+        // Honolulu time will be 2026-03-08 12:00:00 (Today)
+        \Carbon\Carbon::setTestNow('2026-03-08 22:00:00');
+
+        $tokyoToday = '2026-03-09';
+        $honoluluToday = '2026-03-08';
+
+        // Tokyo user completes habit for their "today"
+        $this->actingAs($userTokyo)->post("/habits/{$habitTokyo->id}/toggle", [
+            'date' => $tokyoToday,
+        ]);
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habitTokyo->id,
+            'completed_date' => $tokyoToday . ' 00:00:00',
+        ]);
+
+        // Honolulu user completes habit for their "today"
+        $this->actingAs($userHonolulu)->post("/habits/{$habitHonolulu->id}/toggle", [
+            'date' => $honoluluToday,
+        ]);
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habitHonolulu->id,
+            'completed_date' => $honoluluToday . ' 00:00:00',
+        ]);
+
+        // Assert streaks are 1 for both (since they completed it on their respective "today")
+        $this->assertEquals(1, $habitTokyo->fresh()->getStreaks()['current']);
+        $this->assertEquals(1, $habitHonolulu->fresh()->getStreaks()['current']);
+
+        // Assert Tokyo completing on Honolulu's today (yesterday for Tokyo) counts as active streak of 1
+        $habitTokyo->completions()->delete();
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habitTokyo->id, 'completed_date' => $honoluluToday]);
+        $this->assertEquals(1, $habitTokyo->fresh()->getStreaks()['current']);
+
+        // Assert Tokyo completing on the day before Honolulu's today (2 days ago for Tokyo) breaks streak
+        $habitTokyo->completions()->delete();
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habitTokyo->id, 'completed_date' => '2026-03-07']);
+        $this->assertEquals(0, $habitTokyo->fresh()->getStreaks()['current']);
+    }
 }
