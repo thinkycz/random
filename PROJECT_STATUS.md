@@ -44,5 +44,8 @@
 
 ## Setup or Environment Notes
 - **Database:** SQLite is used locally.
+
+## Latest Updates
+- Fixed the Timezone bug allowing users to select their local timezone via the Profile page. "Today" is now calculated accurately for each user when toggling completions and calculating streaks, resolving the issue where server time skewed completion records.
 - **Frontend:** Requires Node.js (`npm install && npm run build`).
 - Ensure `php artisan migrate:fresh --seed` is run to populate realistic fake data.
