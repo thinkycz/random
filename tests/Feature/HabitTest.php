@@ -104,4 +104,49 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_timezone_aware_streaks()
+    {
+        // Let's create a scenario where UTC time is "tomorrow" relative to a specific timezone.
+        // For instance, if UTC is 2026-03-08 02:00:00
+        // Pacific/Honolulu (-10) would be 2026-03-07 16:00:00
+
+        \Carbon\Carbon::setTestNow('2026-03-08 02:00:00');
+
+        $user = \App\Models\User::factory()->create(['timezone' => 'Pacific/Honolulu']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // In Honolulu, "today" is 2026-03-07.
+        // So a completion on 2026-03-07 should count as "today".
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => '2026-03-07']);
+
+        $streaks = $habit->fresh()->getStreaks();
+
+        // Because "today" is 2026-03-07 in Honolulu, and we completed it on 2026-03-07, the current streak should be 1.
+        $this->assertEquals(1, $streaks['current']);
+        $this->assertEquals(1, $streaks['longest']);
+
+        // Now let's test if a user with UTC timezone gets the correct streak.
+        // For UTC, "today" is 2026-03-08.
+        $userUtc = \App\Models\User::factory()->create(['timezone' => 'UTC']);
+        $habitUtc = \App\Models\Habit::factory()->create(['user_id' => $userUtc->id]);
+
+        // Completing on 2026-03-07 means "yesterday" for UTC.
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habitUtc->id, 'completed_date' => '2026-03-07']);
+
+        $streaksUtc = $habitUtc->fresh()->getStreaks();
+
+        // Since it was yesterday in UTC, the streak is still active (1).
+        $this->assertEquals(1, $streaksUtc['current']);
+
+        // Now if we have a completion on 2026-03-06 (two days ago for UTC), the streak breaks.
+        \App\Models\HabitCompletion::where('habit_id', $habitUtc->id)->delete();
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habitUtc->id, 'completed_date' => '2026-03-06']);
+
+        $streaksUtcBroken = $habitUtc->fresh()->getStreaks();
+        $this->assertEquals(0, $streaksUtcBroken['current']);
+
+        // Reset Carbon mock
+        \Carbon\Carbon::setTestNow();
+    }
 }
