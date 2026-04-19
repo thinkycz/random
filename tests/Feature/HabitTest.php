@@ -72,7 +72,7 @@ class HabitTest extends TestCase
 
     public function test_streak_calculation()
     {
-        $user = \App\Models\User::factory()->create();
+        $user = \App\Models\User::factory()->create(['timezone' => 'UTC']);
         $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
 
         // No completions
@@ -103,5 +103,37 @@ class HabitTest extends TestCase
         $response = $this->actingAs($user)->get(route('habits.index'));
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
+    }
+
+    public function test_streak_calculation_with_timezone()
+    {
+        // Let's set the server timezone to UTC temporarily via config
+        config(['app.timezone' => 'UTC']);
+
+        // Imagine server is exactly 00:30 UTC on Feb 2nd.
+        $serverNow = \Carbon\Carbon::parse('2026-02-02 00:30:00', 'UTC');
+        \Carbon\Carbon::setTestNow($serverNow);
+
+        // A user in America/Los_Angeles (UTC-8) would still be at 16:30 on Feb 1st.
+        $user = \App\Models\User::factory()->create(['timezone' => 'America/Los_Angeles']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // If they complete a habit now, the toggle method uses their local date "2026-02-01"
+        $this->actingAs($user)->post("/habits/{$habit->id}/toggle", [
+            'date' => now($user->timezone)->format('Y-m-d'), // which is 2026-02-01
+        ]);
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => '2026-02-01 00:00:00',
+        ]);
+
+        // And from their perspective, they have a current streak of 1 (since today is Feb 1st)
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(1, $streaks['current']);
+        $this->assertEquals(1, $streaks['longest']);
+
+        // Cleanup
+        \Carbon\Carbon::setTestNow();
     }
 }

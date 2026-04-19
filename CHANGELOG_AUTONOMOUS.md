@@ -86,3 +86,26 @@ This file must be append-only and contain:
 
 **Breaking changes:**
 - None.
+
+## April 19, 2026
+**Features added:**
+- Added `timezone` field to the User profile allowing users to configure their local timezone.
+- Refactored Habit toggling and Streak calculations to use the user's specific timezone instead of the server's UTC time. This correctly bounds "today" and "yesterday" regardless of the user's geographical location.
+
+**Files/modules affected:**
+- `app/Models/User.php` (Added `timezone` to `$fillable`).
+- `app/Http/Requests/ProfileUpdateRequest.php` (Added validation rule for `timezone`).
+- `resources/views/profile/partials/update-profile-information-form.blade.php` (Added timezone select field).
+- `app/Models/Habit.php` (Updated `getStreaks()` method to utilize user's timezone).
+- `app/Http/Controllers/HabitController.php` (Updated `dashboard` and `toggle` methods to generate dates using user's timezone).
+- `resources/views/dashboard.blade.php` (Updated to reflect "today" visual logic using user's timezone).
+
+**Migrations created:**
+- `2026_04_19_084521_add_timezone_to_users_table`
+
+**Tests added/updated:**
+- `tests/Feature/ProfileTest.php` (Updated payloads to include timezone).
+- `tests/Feature/HabitTest.php` (Added `test_streak_calculation_with_timezone` to verify edge cases).
+
+**Breaking changes:**
+- None.
