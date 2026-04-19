@@ -1,9 +1,9 @@
 # Project Status
 
 ## Current Date/Session Summary
-**Date:** March 8, 2026
+**Date:** April 19, 2026
 
-**Summary:** Added Streak calculation logic. Habits now automatically calculate their current and longest daily streak. These streaks are displayed cleanly on the Habits Index page.
+**Summary:** Resolved the timezone bug by adding a timezone field to the user profile. The application now uses the user's local timezone instead of the server's UTC timezone to determine "today" boundaries, ensuring habits are toggled and streaks are calculated accurately across different global locations.
 
 ## What has been completed
 - Installed Laravel Breeze and configured authentication (Blade/Tailwind).
@@ -15,21 +15,20 @@
 - Established persistent tracking files and documentation.
 - Implemented a responsive 7-day Weekly View on the dashboard.
 - Implemented current and longest streak calculations and displayed them on the Habits index page.
+- **Added a 'timezone' field to users and refactored Habit models/controllers to respect user's local timezone.**
 
 ## What is in progress
 - None.
 
 ## Known Issues
-- Users might accidentally complete habits on incorrect dates if the timezone differs between server and client. (Currently server-side timestamp is used).
 - If a category is deleted, habits associated with it lose the category but still remain. This behavior is intentional for now but needs clearer UI messaging in the future.
 
 ## Next Recommended Tasks
-- **Client-Side Timezone Handling:** Ensure "today" aligns with the user's local timezone.
 - **Refactoring:** Extract completion logic into a dedicated Service or Action class if it grows more complex.
 - **Data Visualization:** Add a simple chart to the dashboard showing completion percentages over the last 30 days.
+- **Habit Archiving:** Allow users to hide a habit without deleting its history.
 
 ## Technical Debt Notes
-- The "toggle" logic in `HabitController` is directly manipulating completions and dates based on server time. This works for MVP but could lead to bugs if the user is in a timezone where "today" differs from UTC.
 - UI empty states are basic text; they could benefit from simple illustrations or icons.
 
 ## Test Coverage Notes
