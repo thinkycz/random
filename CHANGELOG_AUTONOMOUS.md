@@ -86,3 +86,27 @@ This file must be append-only and contain:
 
 **Breaking changes:**
 - None.
+
+---
+
+## April 22, 2026
+**Features added:**
+- Added user timezone settings to accurately record habit completions and calculate streaks based on local time rather than server UTC time.
+
+**Files/modules affected:**
+- `app/Models/User.php` (Added `timezone` fillable attribute).
+- `app/Models/Habit.php` (Updated `getStreaks` method).
+- `app/Http/Controllers/HabitController.php` (Updated timezone logic in `dashboard` and `toggle` methods).
+- `app/Http/Requests/ProfileUpdateRequest.php` (Added validation).
+- `resources/views/profile/partials/update-profile-information-form.blade.php` (Added timezone dropdown).
+- `database/factories/UserFactory.php` (Updated default factory state).
+
+**Migrations created:**
+- `2026_04_22_090614_add_timezone_to_users_table`
+
+**Tests added/updated:**
+- `tests/Feature/ProfileTest.php` (Updated to include timezone field).
+- `tests/Feature/HabitTest.php` (Added `test_timezone_handling_for_habit_completion`).
+
+**Breaking changes:**
+- None.
