@@ -86,3 +86,30 @@ This file must be append-only and contain:
 
 **Breaking changes:**
 - None.
+
+---
+
+## April 26, 2026
+**Features added:**
+- Implemented user-specific timezone handling.
+- Users can select their local timezone via their profile page.
+- Dashboard habit calculations (determining "today" and the last 7 days) and completion toggles now use the user's specific timezone.
+- Streak calculations in the `Habit` model now properly account for the user's local timezone to determine consecutive days.
+
+**Files/modules affected:**
+- `app/Models/User.php` (Added `timezone` fillable).
+- `app/Models/Habit.php` (Updated `getStreaks` to use timezone).
+- `app/Http/Controllers/HabitController.php` (Updated date logic).
+- `app/Http/Requests/ProfileUpdateRequest.php` (Added validation).
+- `resources/views/profile/partials/update-profile-information-form.blade.php` (Added UI field).
+- `resources/views/dashboard.blade.php` (Updated to reflect local timezone).
+
+**Migrations created:**
+- `2026_04_26_090054_add_timezone_to_users_table.php`
+
+**Tests added/updated:**
+- `tests/Feature/ProfileTest.php` (Updated payloads to pass timezone validation).
+- `tests/Feature/HabitTest.php` (Added `test_streak_calculation_respects_timezone`).
+
+**Breaking changes:**
+- None.
