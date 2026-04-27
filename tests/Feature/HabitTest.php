@@ -104,4 +104,37 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_timezone_affects_streak_and_dashboard_calculation()
+    {
+        // Suppose the server is in UTC, and right now it's 2026-03-08 01:00:00 UTC.
+        // A user in America/Los_Angeles (UTC-8) would still be in 2026-03-07 17:00:00.
+        \Carbon\Carbon::setTestNow('2026-03-08 01:00:00');
+
+        $user = \App\Models\User::factory()->create([
+            'timezone' => 'America/Los_Angeles' // It's still March 7th for them
+        ]);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // If they complete the habit, and the date sent is '2026-03-07'
+        \App\Models\HabitCompletion::factory()->create([
+            'habit_id' => $habit->id,
+            'completed_date' => '2026-03-07'
+        ]);
+
+        $streaks = $habit->getStreaks();
+
+        // For LA, today is 2026-03-07. The completion is today.
+        $this->assertEquals(1, $streaks['current']);
+        $this->assertEquals(1, $streaks['longest']);
+
+        $response = $this->actingAs($user)->get('/dashboard');
+        $response->assertStatus(200);
+
+        // Check specifically for the day grid strings
+        $response->assertSee('<span>7</span>', false);
+        $response->assertDontSee('<span>8</span>', false);
+
+        \Carbon\Carbon::setTestNow(); // reset
+    }
 }
