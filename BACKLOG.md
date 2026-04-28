@@ -8,7 +8,7 @@ Each item should have a rough priority: High, Medium, Low.
 - **[Low] Sharing/Leaderboards:** Let users share their progress with friends.
 
 ## Bug Fixes
-- **[Medium] Timezone Bug:** Currently, "today" uses the server's timezone. This could mean a habit marked at 11 PM local time is recorded as "tomorrow" if the server is ahead. A solution is needed (e.g., passing user's timezone from JS or storing it in the profile).
+- None currently reported.
 
 ## UX Improvements
 - **[High] Empty States:** Replace text-only empty states with visually appealing illustrations or SVGs.
