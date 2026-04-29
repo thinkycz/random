@@ -70,6 +70,28 @@ class HabitTest extends TestCase
         ]);
     }
 
+    public function test_user_in_different_timezone_toggles_habit_correctly(): void
+    {
+        $user = \App\Models\User::factory()->create([
+            'timezone' => 'Asia/Tokyo' // UTC+9
+        ]);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // Mock time to a specific UTC time where Tokyo is on a DIFFERENT day.
+        // E.g. UTC is 2026-03-08 22:00:00 -> Tokyo is 2026-03-09 07:00:00
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::create(2026, 3, 8, 22, 0, 0, 'UTC'));
+
+        // Toggle the habit without passing a date (should default to user's localized 'today')
+        $this->actingAs($user)->post("/habits/{$habit->id}/toggle");
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => '2026-03-09 00:00:00',
+        ]);
+
+        \Carbon\Carbon::setTestNow(); // Reset mock
+    }
+
     public function test_streak_calculation()
     {
         $user = \App\Models\User::factory()->create();
