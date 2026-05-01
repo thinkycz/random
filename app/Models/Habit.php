@@ -49,16 +49,17 @@ class Habit extends Model
         $currentStreak = 0;
         $longestStreak = 0;
 
-        $today = now()->format('Y-m-d');
-        $yesterday = now()->subDay()->format('Y-m-d');
+        $timezone = $this->user->timezone ?? 'UTC';
+        $today = now($timezone)->format('Y-m-d');
+        $yesterday = now($timezone)->subDay()->format('Y-m-d');
 
         $i = 0;
         $activeStreakDate = null;
 
         if ($completions[0] === $today) {
-            $activeStreakDate = now();
+            $activeStreakDate = now($timezone);
         } elseif ($completions[0] === $yesterday) {
-            $activeStreakDate = now()->subDay();
+            $activeStreakDate = now($timezone)->subDay();
         }
 
         if ($activeStreakDate) {
@@ -73,8 +74,8 @@ class Habit extends Model
         $longestStreak = 1;
 
         for ($j = 0; $j < count($completions) - 1; $j++) {
-            $current = \Carbon\Carbon::parse($completions[$j]);
-            $next = \Carbon\Carbon::parse($completions[$j + 1]);
+            $current = \Carbon\Carbon::parse($completions[$j], $timezone);
+            $next = \Carbon\Carbon::parse($completions[$j + 1], $timezone);
 
             if ($current->copy()->subDay()->format('Y-m-d') === $next->format('Y-m-d')) {
                 $tempStreak++;
