@@ -1,9 +1,9 @@
 # Project Status
 
 ## Current Date/Session Summary
-**Date:** March 8, 2026
+**Date:** March 8, 2026 (Session 4)
 
-**Summary:** Added Streak calculation logic. Habits now automatically calculate their current and longest daily streak. These streaks are displayed cleanly on the Habits Index page.
+**Summary:** Addressed the timezone bug. Added a timezone field to the user profile and updated the dashboard, streak calculations, and completion toggling to respect the user's selected timezone rather than the server's UTC time. This ensures users in different timezones don't accidentally complete habits on the wrong date.
 
 ## What has been completed
 - Installed Laravel Breeze and configured authentication (Blade/Tailwind).
@@ -15,21 +15,20 @@
 - Established persistent tracking files and documentation.
 - Implemented a responsive 7-day Weekly View on the dashboard.
 - Implemented current and longest streak calculations and displayed them on the Habits index page.
+- Added user timezone support and timezone-aware habit tracking.
 
 ## What is in progress
 - None.
 
 ## Known Issues
-- Users might accidentally complete habits on incorrect dates if the timezone differs between server and client. (Currently server-side timestamp is used).
 - If a category is deleted, habits associated with it lose the category but still remain. This behavior is intentional for now but needs clearer UI messaging in the future.
 
 ## Next Recommended Tasks
-- **Client-Side Timezone Handling:** Ensure "today" aligns with the user's local timezone.
 - **Refactoring:** Extract completion logic into a dedicated Service or Action class if it grows more complex.
 - **Data Visualization:** Add a simple chart to the dashboard showing completion percentages over the last 30 days.
+- **UI Empty States:** Add nice illustrations to empty states instead of basic text.
 
 ## Technical Debt Notes
-- The "toggle" logic in `HabitController` is directly manipulating completions and dates based on server time. This works for MVP but could lead to bugs if the user is in a timezone where "today" differs from UTC.
 - UI empty states are basic text; they could benefit from simple illustrations or icons.
 
 ## Test Coverage Notes
@@ -40,7 +39,8 @@
   - Creating habits.
   - Toggling habit completions.
   - Asserting users cannot view/edit others' data (authorization).
-- Test coverage is moderate. Edge cases, like timezone issues, are not yet tested.
+  - Asserting timezone-specific edge cases work properly.
+- Test coverage is moderate.
 
 ## Setup or Environment Notes
 - **Database:** SQLite is used locally.
