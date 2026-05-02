@@ -104,4 +104,35 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_streak_calculation_respects_timezone()
+    {
+        // Suppose it's 11 PM in America/New_York (UTC-4 or UTC-5).
+        // That means it's already the NEXT day in UTC.
+        $user = \App\Models\User::factory()->create(['timezone' => 'America/New_York']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // Lock test time to May 1st, 2024 at 03:00:00 UTC.
+        // In America/New_York, this is April 30th, 2024 at 23:00:00.
+        \Carbon\Carbon::setTestNow('2024-05-01 03:00:00');
+
+        // User marks habit complete for their "today" (which is April 30th).
+        $localToday = now($user->timezone)->format('Y-m-d'); // 2024-04-30
+        $this->assertEquals('2024-04-30', $localToday);
+
+        \App\Models\HabitCompletion::factory()->create([
+            'habit_id' => $habit->id,
+            'completed_date' => $localToday
+        ]);
+
+        $streaks = $habit->fresh()->getStreaks();
+
+        // Because "today" in the user's timezone is 2024-04-30 and they have a completion for it,
+        // the current streak should be 1, rather than 0 (which it would be if it used UTC "today" of 2024-05-01).
+        $this->assertEquals(1, $streaks['current']);
+        $this->assertEquals(1, $streaks['longest']);
+
+        // Reset the mock
+        \Carbon\Carbon::setTestNow();
+    }
 }
