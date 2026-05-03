@@ -24,6 +24,18 @@
         </div>
 
         <div>
+            <x-input-label for="timezone" :value="__('Timezone')" />
+            <select id="timezone" name="timezone" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full" required>
+                @foreach(timezone_identifiers_list() as $timezone)
+                    <option value="{{ $timezone }}" {{ old('timezone', $user->timezone) === $timezone ? 'selected' : '' }}>
+                        {{ $timezone }}
+                    </option>
+                @endforeach
+            </select>
+            <x-input-error class="mt-2" :messages="$errors->get('timezone')" />
+        </div>
+
+        <div>
             <x-input-label for="email" :value="__('Email')" />
             <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
             <x-input-error class="mt-2" :messages="$errors->get('email')" />
