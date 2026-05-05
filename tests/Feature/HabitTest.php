@@ -104,4 +104,40 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_timezone_logic()
+    {
+        // Set mock time: May 5th, 2026 23:00:00 UTC
+        \Carbon\Carbon::setTestNow('2026-05-05 23:00:00');
+
+        // User A is in UTC (it is May 5th for them)
+        $userA = \App\Models\User::factory()->create(['timezone' => 'UTC']);
+        $habitA = \App\Models\Habit::factory()->create(['user_id' => $userA->id]);
+
+        // User B is in Asia/Tokyo (UTC+9) (it is May 6th, 08:00:00 for them)
+        $userB = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']);
+        $habitB = \App\Models\Habit::factory()->create(['user_id' => $userB->id]);
+
+        // Verify "today" calculated for the dashboard toggle
+        $responseA = $this->actingAs($userA)->post("/habits/{$habitA->id}/toggle");
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habitA->id,
+            'completed_date' => '2026-05-05 00:00:00', // Today in UTC
+        ]);
+
+        $responseB = $this->actingAs($userB)->post("/habits/{$habitB->id}/toggle");
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habitB->id,
+            'completed_date' => '2026-05-06 00:00:00', // Today in Asia/Tokyo
+        ]);
+
+        // Verify streak calculations
+        // For User A, they completed it on their "today" (May 5th)
+        $streaksA = $habitA->fresh()->getStreaks();
+        $this->assertEquals(1, $streaksA['current']);
+
+        // For User B, they completed it on their "today" (May 6th)
+        $streaksB = $habitB->fresh()->getStreaks();
+        $this->assertEquals(1, $streaksB['current']);
+    }
 }
