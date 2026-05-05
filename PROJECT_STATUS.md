@@ -46,3 +46,15 @@
 - **Database:** SQLite is used locally.
 - **Frontend:** Requires Node.js (`npm install && npm run build`).
 - Ensure `php artisan migrate:fresh --seed` is run to populate realistic fake data.
+## May 5, 2026 Session Summary
+- **Implemented User Timezone Support:** Added a `timezone` column to the users table and updated profile settings so users can set their local timezone.
+- **Fixed Bug:** Dashboard habit completion querying, default toggle dates, and streak calculations now all respect the user's localized timezone rather than UTC. This fixes the issue where habits marked late at night might be recorded on the wrong day.
+- **Tests Added:** Created robust timezone logic tests in `tests/Feature/HabitTest.php`.
+
+## Remaining Gaps or Risks
+- Currently missing frontend tests.
+- UI could still use more illustrations or better empty states.
+
+## Recommended Next Tasks
+- Add a simple chart to the dashboard showing completion percentages over the last 30 days.
+- Replace text-only empty states with visually appealing illustrations or SVGs.

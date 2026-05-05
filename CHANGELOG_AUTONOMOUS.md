@@ -86,3 +86,26 @@ This file must be append-only and contain:
 
 **Breaking changes:**
 - None.
+
+## May 5, 2026 (Session 4)
+**Features added:**
+- Added user timezone support.
+- Updated dashboard display and toggle endpoints to calculate dates based on the user's local timezone.
+- Updated streak calculation logic to respect the user's local timezone to prevent boundary bugs.
+
+**Files/modules affected:**
+- `app/Models/User.php`
+- `app/Http/Requests/ProfileUpdateRequest.php`
+- `resources/views/profile/partials/update-profile-information-form.blade.php`
+- `app/Http/Controllers/HabitController.php`
+- `app/Models/Habit.php`
+
+**Migrations created:**
+- `2026_05_05_084643_add_timezone_to_users_table`
+
+**Tests added:**
+- `test_timezone_logic` in `tests/Feature/HabitTest.php`
+- Updated `ProfileTest.php` to handle new timezone validation rule.
+
+**Breaking changes:**
+- None.

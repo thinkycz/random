@@ -49,16 +49,21 @@ class Habit extends Model
         $currentStreak = 0;
         $longestStreak = 0;
 
-        $today = now()->format('Y-m-d');
-        $yesterday = now()->subDay()->format('Y-m-d');
+        // Since habits are mostly queried for the logged-in user, we fallback to auth()->user()->timezone to avoid N+1 if user isn't loaded.
+        $timezone = $this->relationLoaded('user')
+            ? ($this->user->timezone ?? 'UTC')
+            : (auth()->check() ? auth()->user()->timezone : 'UTC');
+
+        $today = now($timezone)->format('Y-m-d');
+        $yesterday = now($timezone)->subDay()->format('Y-m-d');
 
         $i = 0;
         $activeStreakDate = null;
 
         if ($completions[0] === $today) {
-            $activeStreakDate = now();
+            $activeStreakDate = now($timezone);
         } elseif ($completions[0] === $yesterday) {
-            $activeStreakDate = now()->subDay();
+            $activeStreakDate = now($timezone)->subDay();
         }
 
         if ($activeStreakDate) {
