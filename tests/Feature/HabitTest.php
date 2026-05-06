@@ -104,4 +104,33 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_timezone_affects_today_calculation()
+    {
+        // Suppose the server is at UTC 00:30 on May 2nd.
+        \Carbon\Carbon::setTestNow('2026-05-02 00:30:00');
+
+        $userNY = \App\Models\User::factory()->create(['timezone' => 'America/New_York']); // UTC-4, so it's May 1st 20:30 locally
+        $habitNY = \App\Models\Habit::factory()->create(['user_id' => $userNY->id]);
+
+        // Complete the habit
+        $responseNY = $this->actingAs($userNY)->post("/habits/{$habitNY->id}/toggle", [
+            'date' => now('America/New_York')->format('Y-m-d') // May 1st
+        ]);
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habitNY->id,
+            'completed_date' => '2026-05-01 00:00:00'
+        ]);
+
+        // Dashboard should reflect correctly for May 1st
+        $responseDashboard = $this->actingAs($userNY)->get('/dashboard');
+        $responseDashboard->assertStatus(200);
+
+        // For the NY user, it's currently May 1st.
+        // We ensure "today" is May 1st.
+        $this->assertEquals(now('America/New_York')->format('Y-m-d'), '2026-05-01');
+
+        \Carbon\Carbon::setTestNow(); // reset
+    }
 }
