@@ -104,4 +104,48 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_timezone_day_boundaries()
+    {
+        // Imagine right now is 2026-03-08 02:00:00 UTC
+        \Carbon\Carbon::setTestNow('2026-03-08 02:00:00');
+
+        // User 1 is in Tokyo (UTC+9), so it's 2026-03-08 11:00:00 local
+        $userTokyo = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']);
+        $habitTokyo = \App\Models\Habit::factory()->create(['user_id' => $userTokyo->id]);
+
+        // Mark habit complete for "today" in Tokyo
+        $this->actingAs($userTokyo)->post("/habits/{$habitTokyo->id}/toggle", [
+            'date' => now($userTokyo->timezone)->format('Y-m-d') // '2026-03-08'
+        ]);
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habitTokyo->id,
+            'completed_date' => '2026-03-08 00:00:00',
+        ]);
+
+        // User 2 is in Los Angeles (UTC-8), so it's 2026-03-07 18:00:00 local
+        $userLA = \App\Models\User::factory()->create(['timezone' => 'America/Los_Angeles']);
+        $habitLA = \App\Models\Habit::factory()->create(['user_id' => $userLA->id]);
+
+        // Mark habit complete for "today" in LA
+        $this->actingAs($userLA)->post("/habits/{$habitLA->id}/toggle", [
+            'date' => now($userLA->timezone)->format('Y-m-d') // '2026-03-07'
+        ]);
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habitLA->id,
+            'completed_date' => '2026-03-07 00:00:00',
+        ]);
+
+        // Check streaks for LA user. The last completion was 2026-03-07.
+        // Today for LA is 2026-03-07. So the active streak is 1.
+        $streaksLA = $habitLA->fresh()->getStreaks();
+        $this->assertEquals(1, $streaksLA['current']);
+
+        // Check streaks for Tokyo user. The last completion was 2026-03-08.
+        // Today for Tokyo is 2026-03-08. So the active streak is 1.
+        $streaksTokyo = $habitTokyo->fresh()->getStreaks();
+        $this->assertEquals(1, $streaksTokyo['current']);
+    }
 }
