@@ -86,3 +86,29 @@ This file must be append-only and contain:
 
 **Breaking changes:**
 - None.
+
+---
+
+## March 8, 2026 (Session 4)
+**Features added:**
+- Added a `timezone` setting to the user profile allowing users to configure their local time.
+- Updated the dashboard's "today" logic to respect the user's timezone instead of relying on server UTC time.
+- Updated habit streak calculations to compute consecutive days based on the user's specific timezone.
+
+**Files/modules affected:**
+- `app/Models/User.php` (Added `timezone` fillable attribute).
+- `app/Http/Requests/ProfileUpdateRequest.php` (Added `timezone` validation rule).
+- `resources/views/profile/partials/update-profile-information-form.blade.php` (Added Timezone select menu).
+- `app/Http/Controllers/HabitController.php` (Calculated days array with `$timezone`).
+- `resources/views/dashboard.blade.php` (Calculated `$isToday` using `$timezone`).
+- `app/Models/Habit.php` (Calculated streaks based on user timezone).
+
+**Migrations created:**
+- `add_timezone_to_users_table`
+
+**Tests added/updated:**
+- `tests/Feature/ProfileTest.php` (Updated profile update tests to handle timezone).
+- `tests/Feature/HabitTest.php` (Added `test_streak_calculation_respects_timezone`).
+
+**Breaking changes:**
+- None.
