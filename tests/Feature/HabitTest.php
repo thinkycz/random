@@ -104,4 +104,37 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_streak_calculation_respects_user_timezone()
+    {
+        // Server is in UTC.
+        // User is in a timezone 12 hours ahead (e.g. Pacific/Auckland).
+        $user = \App\Models\User::factory()->create(['timezone' => 'Pacific/Auckland']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // Mock 'now' to be exactly 10:00 PM UTC on Jan 1st.
+        // In Pacific/Auckland (+13 hours in summer, let's just use +12 for logic), it is 10:00 AM on Jan 2nd.
+        $utcNow = \Carbon\Carbon::create(2026, 1, 1, 22, 0, 0, 'UTC');
+        \Carbon\Carbon::setTestNow($utcNow);
+
+        // So user's 'today' is Jan 2nd, 'yesterday' is Jan 1st.
+
+        // If we record a completion on Jan 2nd (today for user).
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => '2026-01-02']);
+
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(1, $streaks['current']);
+
+        // Now if we mock now to be exactly 1:00 PM UTC on Jan 1st
+        // In Pacific/Auckland it's 2:00 AM on Jan 2nd.
+        // User's 'today' is still Jan 2nd.
+        $utcNow2 = \Carbon\Carbon::create(2026, 1, 1, 13, 0, 0, 'UTC');
+        \Carbon\Carbon::setTestNow($utcNow2);
+
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(1, $streaks['current']); // Still active streak.
+
+        // Clean up
+        \Carbon\Carbon::setTestNow();
+    }
 }
