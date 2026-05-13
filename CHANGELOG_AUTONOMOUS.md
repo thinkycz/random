@@ -86,3 +86,29 @@ This file must be append-only and contain:
 
 **Breaking changes:**
 - None.
+
+---
+
+## May 13, 2026
+**Features added:**
+- Added user timezone support.
+- Users can specify their local timezone from the profile update form.
+- The dashboard display, habit toggle functionality, and streak calculations now properly respect the user's local timezone.
+
+**Files/modules affected:**
+- `app/Models/User.php` (Added `timezone` fillable).
+- `app/Models/Habit.php` (Updated `getStreaks` calculation).
+- `app/Http/Controllers/HabitController.php` (Updated timezone logic).
+- `app/Http/Requests/ProfileUpdateRequest.php` (Added timezone validation).
+- `resources/views/profile/partials/update-profile-information-form.blade.php` (Added timezone input field).
+- `resources/views/dashboard.blade.php` (Updated "today" checking).
+
+**Migrations created:**
+- `2026_05_13_091205_add_timezone_to_users_table.php`
+
+**Tests added/updated:**
+- `tests/Feature/ProfileTest.php` (Updated with timezone assertion).
+- `tests/Feature/HabitTest.php` (Updated timezone behavior and added `test_timezone_behavior` method to test simulated edge case).
+
+**Breaking changes:**
+- None.
