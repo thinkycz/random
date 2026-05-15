@@ -31,8 +31,11 @@ class Habit extends Model
         return $this->hasMany(HabitCompletion::class);
     }
 
-    public function getStreaks()
+    public function getStreaks(?string $timezone = null)
     {
+        // If timezone isn't passed directly, fall back to user's timezone if eager-loaded, or UTC
+        $timezone = $timezone ?? ($this->relationLoaded('user') ? $this->user->timezone : auth()->user()->timezone ?? 'UTC');
+
         // Pluck the dates, unique them, sort descending, and convert to array of strings
         $completions = $this->completions
             ->pluck('completed_date')
@@ -49,16 +52,16 @@ class Habit extends Model
         $currentStreak = 0;
         $longestStreak = 0;
 
-        $today = now()->format('Y-m-d');
-        $yesterday = now()->subDay()->format('Y-m-d');
+        $today = now($timezone)->format('Y-m-d');
+        $yesterday = now($timezone)->subDay()->format('Y-m-d');
 
         $i = 0;
         $activeStreakDate = null;
 
         if ($completions[0] === $today) {
-            $activeStreakDate = now();
+            $activeStreakDate = now($timezone);
         } elseif ($completions[0] === $yesterday) {
-            $activeStreakDate = now()->subDay();
+            $activeStreakDate = now($timezone)->subDay();
         }
 
         if ($activeStreakDate) {

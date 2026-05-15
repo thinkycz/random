@@ -72,18 +72,39 @@ class HabitTest extends TestCase
 
     public function test_streak_calculation()
     {
-        $user = \App\Models\User::factory()->create();
+        $user = \App\Models\User::factory()->create(['timezone' => 'America/New_York']);
         $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // Let's fix time to 01:00 AM UTC on May 15.
+        // In America/New_York (UTC-4), it is May 14, 09:00 PM.
+        \Carbon\Carbon::setTestNow('2026-05-15 01:00:00');
 
         // No completions
         $streaks = $habit->getStreaks();
         $this->assertEquals(0, $streaks['current']);
         $this->assertEquals(0, $streaks['longest']);
 
+        // Test streak boundary using user's timezone (America/New_York -> Today is May 14).
+        // A completion on May 14 should give a 1-day current streak.
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => '2026-05-14']);
+
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(1, $streaks['current']);
+
+        // A completion on May 13 should give a 2-day current streak.
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => '2026-05-13']);
+
+        $streaks = $habit->fresh()->getStreaks();
+        $this->assertEquals(2, $streaks['current']);
+
+        // Reset state
+        $habit->completions()->delete();
+        \Carbon\Carbon::setTestNow();
+
         // 3 day streak ending yesterday
-        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now()->subDay()->format('Y-m-d')]);
-        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now()->subDays(2)->format('Y-m-d')]);
-        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now()->subDays(3)->format('Y-m-d')]);
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now($user->timezone)->subDay()->format('Y-m-d')]);
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now($user->timezone)->subDays(2)->format('Y-m-d')]);
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now($user->timezone)->subDays(3)->format('Y-m-d')]);
 
         $streaks = $habit->fresh()->getStreaks();
         $this->assertEquals(3, $streaks['current']);
@@ -92,8 +113,8 @@ class HabitTest extends TestCase
         // Missed today, so current streak is 3 (yesterday still counts as active).
         // Let's also miss yesterday
         $habit->completions()->delete();
-        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now()->subDays(2)->format('Y-m-d')]);
-        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now()->subDays(3)->format('Y-m-d')]);
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now($user->timezone)->subDays(2)->format('Y-m-d')]);
+        \App\Models\HabitCompletion::factory()->create(['habit_id' => $habit->id, 'completed_date' => now($user->timezone)->subDays(3)->format('Y-m-d')]);
 
         $streaks = $habit->fresh()->getStreaks();
         $this->assertEquals(0, $streaks['current']);
