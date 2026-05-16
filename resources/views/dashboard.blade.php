@@ -56,7 +56,7 @@
                                         @foreach($days as $day)
                                             @php
                                                 $isCompleted = $habit->completions_by_day[$day['date']];
-                                                $isToday = $day['date'] === now()->format('Y-m-d');
+                                                $isToday = $day['date'] === now(auth()->user()->timezone ?? 'UTC')->format('Y-m-d');
                                             @endphp
                                             <td class="whitespace-nowrap px-3 py-4 text-center text-sm {{ $isToday ? 'bg-gray-50' : '' }}">
                                                 <form action="{{ route('habits.toggle', $habit) }}" method="POST" class="inline-block">
