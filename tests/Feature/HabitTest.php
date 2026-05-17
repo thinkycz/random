@@ -104,4 +104,24 @@ class HabitTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('2</span> days', false); // Longest streak
     }
+
+    public function test_user_can_toggle_habit_completion_in_different_timezone(): void
+    {
+        $user = \App\Models\User::factory()->create(['timezone' => 'Asia/Tokyo']);
+        $habit = \App\Models\Habit::factory()->create(['user_id' => $user->id]);
+
+        // Mock time to exactly 23:00 UTC, which is 08:00 UTC+9 (Asia/Tokyo) the NEXT day
+        \Carbon\Carbon::setTestNow('2026-05-17 23:00:00');
+
+        $tokyoToday = now('Asia/Tokyo')->format('Y-m-d'); // 2026-05-18
+
+        $response = $this->actingAs($user)->post("/habits/{$habit->id}/toggle", [
+            'date' => $tokyoToday,
+        ]);
+
+        $this->assertDatabaseHas('habit_completions', [
+            'habit_id' => $habit->id,
+            'completed_date' => $tokyoToday . ' 00:00:00',
+        ]);
+    }
 }
