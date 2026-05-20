@@ -86,3 +86,27 @@ This file must be append-only and contain:
 
 **Breaking changes:**
 - None.
+
+---
+
+## May 20, 2026
+**Features added:**
+- Added a `timezone` field to user profiles to correctly attribute daily boundaries for habits.
+- Habit completions and streak logic now accurately respect the user's localized timezone setting instead of relying on the server's timezone.
+
+**Files/modules affected:**
+- `app/Models/User.php` (Added `timezone` fillable).
+- `app/Models/Habit.php` (Updated streak calculation logic to inject user timezone).
+- `app/Http/Controllers/HabitController.php` (Updated dashboard fetching and toggle logic to use user timezone).
+- `app/Http/Requests/ProfileUpdateRequest.php` (Added validation).
+- `resources/views/profile/partials/update-profile-information-form.blade.php` (Added select dropdown for timezones).
+
+**Migrations created:**
+- `add_timezone_to_users_table`
+
+**Tests added/updated:**
+- `tests/Feature/TimezoneTest.php` (Added tests to ensure correct daily boundaries).
+- `tests/Feature/ProfileTest.php` (Updated requests with `timezone` parameter).
+
+**Breaking changes:**
+- None.
